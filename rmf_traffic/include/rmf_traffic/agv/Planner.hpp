@@ -28,6 +28,11 @@
 
 #include <rmf_utils/optional.hpp>
 
+#ifdef CLOBER_RMF
+#include <iostream>
+#include <unistd.h>
+#endif
+
 namespace rmf_traffic {
 namespace agv {
 
@@ -437,6 +442,18 @@ public:
   ///   The goal conditions
   Result plan(const Start& start, Goal goal) const;
 
+  Result clober_plan(const StartSet& starts, Goal goal,
+  std::string target_robot_id,
+  std::string target_start,
+  std::string target_end,
+  std::vector<std::string> target_path,
+  std::string enemy_robot_id,
+  std::string enemy_start,
+  std::size_t enemy_startidx,
+  std::string enemy_end,
+  std::vector<std::string> enemy_path) const;
+
+
   /// Product a plan for the given start and goal conditions. Override the
   /// default options.
   ///
@@ -621,6 +638,10 @@ public:
   ///
   /// \return true if a plan has been found, false otherwise.
   bool resume();
+
+  #ifdef CLOBER_RMF
+  bool clober_resume();
+  #endif
 
   /// Resume planning if the planner was paused.
   ///

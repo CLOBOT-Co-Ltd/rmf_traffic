@@ -2125,6 +2125,23 @@ State DifferentialDrivePlanner::initiate(
   return state;
 }
 
+#ifdef CLOBER_RMF
+//==============================================================================
+std::optional<PlanData> DifferentialDrivePlanner::clober_plan(State& state, 
+std::string target_robot_id,
+std::string target_start,
+std::string target_end,
+std::vector<std::string> target_path,
+std::string enemy_robot_id,
+std::string enemy_start,
+std::size_t enemy_startidx,
+std::string enemy_end,
+std::vector<std::string> enemy_path) const 
+{
+    std::cout << "DifferentialDrivePlanner clober_plan id : " << target_robot_id <<std::endl;
+}
+#endif
+
 //==============================================================================
 std::optional<PlanData> DifferentialDrivePlanner::plan(State& state) const
 {

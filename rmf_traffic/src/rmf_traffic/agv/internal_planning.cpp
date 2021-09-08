@@ -19,6 +19,10 @@
 
 #include "planning/DifferentialDrivePlanner.hpp"
 
+#ifdef CLOBER_RMF
+#include "planning/CloberPlanner.hpp"
+#endif
+
 namespace rmf_traffic {
 namespace agv {
 namespace planning {
@@ -26,12 +30,17 @@ namespace planning {
 //==============================================================================
 InterfacePtr make_planner_interface(Planner::Configuration config)
 {
+  #ifndef CLOBER_RMF
   if (config.vehicle_traits().get_differential())
     return std::make_shared<DifferentialDrivePlanner>(std::move(config));
 
   throw std::runtime_error(
-          "[rmf_traffic::agv::planning::make_planner_interface] The rmf_traffic "
-          "Planner currently only supports differential drive vehicles.");
+      "[rmf_traffic::agv::planning::make_planner_interface] The rmf_traffic "
+      "Planner currently only supports differential drive vehicles.");
+  #else
+  if (config.vehicle_traits().get_differential())
+    return std::make_shared<CloberPlanner>(std::move(config));
+  #endif
 }
 
 } // namespace planning

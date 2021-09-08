@@ -22,6 +22,10 @@
 
 #include "DifferentialDriveHeuristic.hpp"
 
+#ifdef CLOBER_RMF
+#include <iostream>
+#endif
+
 namespace rmf_traffic {
 namespace agv {
 namespace planning {
@@ -39,6 +43,19 @@ public:
     agv::Planner::Options options) const final;
 
   std::optional<PlanData> plan(State& state) const final;
+
+  #ifdef CLOBER_RMF
+  virtual std::optional<PlanData> clober_plan(State& state, 
+  std::string target_robot_id,
+  std::string target_start,
+  std::string target_end,
+  std::vector<std::string> target_path,
+  std::string enemy_robot_id,
+  std::string enemy_start,
+  std::size_t enemy_startidx,
+  std::string enemy_end,
+  std::vector<std::string> enemy_path) const final;
+  #endif
 
   std::vector<schedule::Itinerary> rollout(
     const Duration span,

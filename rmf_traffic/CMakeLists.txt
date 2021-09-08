@@ -35,12 +35,22 @@ set(FCL_LIBRARIES fcl)
 find_package(rmf_utils REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(Threads)
+if(DEFINED ENV{CLOBER_RMF}) # clober
+  find_package(rclcpp REQUIRED)
+  find_package(yaml-cpp REQUIRED)
+  find_package(rmf_traffic_msgs REQUIRED)
+endif()
 
 # ===== Traffic control library
 file(GLOB_RECURSE core_lib_srcs "src/rmf_traffic/*.cpp")
 add_library(rmf_traffic SHARED
   ${core_lib_srcs}
 )
+
+if(DEFINED ENV{CLOBER_RMF}) # clober
+  set(or_tools
+    ~/Downloads/or-tools_Ubuntu-20.04-64bit_v9.0.9048/lib/libortools.so)
+endif()
 
 find_package(ament_cmake_catch2 QUIET)
 find_package(rmf_cmake_uncrustify QUIET)
@@ -80,19 +90,43 @@ if(using_new_fcl)
   target_compile_definitions(rmf_traffic PRIVATE RMF_TRAFFIC__USING_FCL_0_6)
 endif()
 
-target_link_libraries(rmf_traffic
-  PUBLIC
-    rmf_utils::rmf_utils
-  PRIVATE
-    ${FCL_LIBRARIES}
-)
+if(NOT DEFINED ENV{CLOBER_RMF}) # clober
+  target_link_libraries(rmf_traffic
+    PUBLIC
+      rmf_utils::rmf_utils
+    PRIVATE
+      ${FCL_LIBRARIES}
+  )
+else()
+  target_link_libraries(rmf_traffic
+    PUBLIC
+      rmf_utils::rmf_utils
+      ${or_tools}
+      ${rclcpp_LIBRARIES}
+      yaml-cpp
+      ${rmf_traffic_msgs_LIBRARIES}
+    PRIVATE
+      ${FCL_LIBRARIES}    
+  )
+endif()
 
-target_include_directories(rmf_traffic
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-    ${EIGEN3_INCLUDE_DIRS}
-)
+if(NOT DEFINED ENV{CLOBER_RMF}) # clober
+  target_include_directories(rmf_traffic
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      ${EIGEN3_INCLUDE_DIRS}
+  )
+else()
+  target_include_directories(rmf_traffic
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+      ${EIGEN3_INCLUDE_DIRS}
+      ${rclcpp_INCLUDE_DIRS}
+      ${rmf_traffic_msgs_INCLUDE_DIRS}
+  )
+endif()
 
 # Create cmake config files
 include(CMakePackageConfigHelpers)
@@ -112,6 +146,10 @@ write_basic_package_version_file(
   COMPATIBILITY ExactVersion
 )
 
+if(DEFINED ENV{CLOBER_RMF}) # clober
+  add_compile_definitions(CLOBER_RMF)
+endif()
+
 install(
   TARGETS rmf_traffic
   EXPORT  rmf_traffic-targets
@@ -120,10 +158,17 @@ install(
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
+if(NOT DEFINED ENV{CLOBER_RMF}) # clober
 install(
   DIRECTORY include/rmf_traffic
   DESTINATION include
 )
+else()
+  install(
+    DIRECTORY include/rmf_traffic include/clober_ortools
+    DESTINATION include
+  )
+endif()
 
 install(
   FILES
