@@ -26,6 +26,7 @@ COrtools::~COrtools()
 }
 
 void COrtools::ClearRobotSet(){
+    solver_->Clear();
     t_robotset_.clear();
 }
 
@@ -147,7 +148,7 @@ void COrtools::MakeStepVariables(std::string robot_name)
         for (int a = 0; a < t_arcset_.size(); a++)
         {
             std::string name = robot_name + "_step_" + std::to_string(t) + "_" + t_arcset_[a];
-            std::cout << "step variable name : " << name << std::endl;
+            // std::cout << "step variable name : " << name << std::endl;
 
             MPVariable *const x_step = solver_->MakeBoolVar(name);
             // MPVariable *const x_step = solver_->MakeIntVar(0,1,name);
@@ -161,7 +162,7 @@ void COrtools::MakeStepVariables(std::string robot_name)
             step_const->SetCoefficient(step_var[i], 1);
         }
 
-        std::cout <<"step var const name : "<<const_name << std::endl;
+        // std::cout <<"step var const name : "<<const_name << std::endl;
     }
 }
 
@@ -253,7 +254,7 @@ void COrtools::MakeOccupiedPath(std::string robot_name, int idx, std::vector<std
         arc_name.insert(arc_name.end(), to.begin(), to.end());
 
         var_name = robot_name + "_step_" + std::to_string(t) + "_" + arc_name;
-        std::cout <<"occupy path collision var name : "<<var_name<<std::endl;
+        // std::cout <<"occupy path collision var name : "<<var_name<<std::endl;
 
         MPVariable* mpVar = NULL;
         mpVar = GetVariableByName(var_name);
@@ -608,7 +609,7 @@ void COrtools::SetObjective(std::string robot_name, std::string goal_name)
         for (int t = 0; t < t_timeset_.size(); t++)
         {
             std::string name = robot_name + "_step_" + std::to_string(t) + "_" + arc_list[i];
-            std::cout << "objective variable name : " << name << std::endl;
+            // std::cout << "objective variable name : " << name << std::endl;
 
             MPVariable *var_name = NULL;
             var_name = GetVariableByName(name);
@@ -677,7 +678,8 @@ std::vector<std::string> COrtools::Solve(std::string robot_name)
 std::vector<std::string> COrtools::ConvertNodePath(std::vector<std::string> state_path)
 {
     std::vector<std::string> nodePath;
-
+    
+    bool start_check_flag = false;
     for (int i = 0; i < state_path.size(); i++)
     {
         // afrom-to 로 노드 경로 만들기
@@ -702,6 +704,13 @@ std::vector<std::string> COrtools::ConvertNodePath(std::vector<std::string> stat
         if (from == to)
         {
             return nodePath;
+        }
+        
+        if (!start_check_flag)
+        {
+            std::string name = "n" + from;
+            nodePath.push_back(name);
+            start_check_flag = true;
         }
 
         std::string name = "n" + to;

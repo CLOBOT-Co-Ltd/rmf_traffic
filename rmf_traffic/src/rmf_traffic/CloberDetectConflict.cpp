@@ -253,7 +253,7 @@ rmf_utils::optional<rmf_traffic::Time> CloberDetectConflict::Implementation::bet
   Eigen::Vector2d pos_b)
 {
   const std::string graph_file =
-  "/home/clober/rmf2_ws/install/clober_rmf/share/clober_rmf/3x3/nav_graphs.yaml";
+  "/home/clober/clober_rmf_ws/install/clober_rmf/share/clober_rmf/3x3/nav_graphs.yaml";
 
   graph = std::make_shared<rmf_traffic::agv::Graph>(
     parse_graph(graph_file));
@@ -289,7 +289,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   CloberDetectConflict::ConflictNotice msg;
 
   const std::string graph_file =
-  "/home/clober/rmf2_ws/install/clober_rmf/share/clober_rmf/3x3/nav_graphs.yaml";
+  "/home/clober/clober_rmf_ws/install/clober_rmf/share/clober_rmf/3x3/nav_graphs.yaml";
 
   graph = std::make_shared<rmf_traffic::agv::Graph>(
     parse_graph(graph_file));
@@ -311,23 +311,35 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   {
     std::cout << "Occur Collision" << std::endl;
     std::cout << "Collision Check for " << name_a << " , " << name_b << std::endl;
-
-    // msg.conflict_version = 1;
-    
+   
     rmf_traffic_msgs::msg::CloberNegotiationNotice CNN;
-  
+
+    //target
     CNN.robotid = name_a;
-    CNN.path = traj_a.first;
-    CNN.start = traj_a.first.front();
-    CNN.startidx = check_start_idx(occupy_a.second, traj_a.first);
+    int idx_a = check_start_idx(occupy_a.second, traj_a.first) - 1;
+    if(idx_a < 0) CNN.startidx = 0;
+    else CNN.startidx = idx_a;
+    std::vector<std::string> path;
+    for(std::size_t i = CNN.startidx; i < traj_a.first.size(); i++)
+    {
+      path.push_back(traj_a.first[i]);
+    }
+    CNN.path = path;
+    CNN.start = path.front();
     CNN.end = traj_a.first.back();
+    // CNN.path = traj_a.first;
+    // CNN.start = traj_a.first.front();
+    // CNN.startidx = check_start_idx(occupy_a.second, traj_a.first);
 
     msg.robot_info.push_back(CNN);
 
+    //enemy
     CNN.robotid = name_b;
     CNN.path = traj_b.first;
     CNN.start = traj_b.first.front();
-    CNN.startidx = check_start_idx(occupy_b.second, traj_b.first);
+    int idx_b = check_start_idx(occupy_b.second, traj_b.first) - 1;
+    if(idx_b < 0) CNN.startidx = 0;
+    else CNN.startidx = idx_b;
     CNN.end = traj_b.first.back();
 
     msg.robot_info.push_back(CNN);
@@ -336,7 +348,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   }  
 
   /* 충돌 없음 */
-  // std::cout << "No Collision" << std::endl;
+  std::cout << "No Collision" << std::endl;
   return msg;
 }
 
