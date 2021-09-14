@@ -60,11 +60,13 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::between2(
   Eigen::Vector2d pos_a,
   std::string name_b,
   const Trajectory& trajectory_b,
-  Eigen::Vector2d pos_b)
+  Eigen::Vector2d pos_b,
+  std::string graph_file)
 {
   return Implementation::between2(
     name_a, trajectory_a, pos_a,
-    name_b, trajectory_b, pos_b);
+    name_b, trajectory_b, pos_b,
+    graph_file);
 }
 
 namespace {
@@ -284,12 +286,13 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   Eigen::Vector2d pos_a,
   std::string name_b,
   const Trajectory& trajectory_b,
-  Eigen::Vector2d pos_b)
+  Eigen::Vector2d pos_b,
+  std::string graph_file)
 {
   CloberDetectConflict::ConflictNotice msg;
 
-  const std::string graph_file =
-  "/home/clober/clober_rmf_ws/install/clober_rmf/share/clober_rmf/3x3/nav_graphs.yaml";
+  // const std::string graph_file =
+  // "/home/clober/clober_rmf_ws/install/clober_rmf/share/clober_rmf/3x3/nav_graphs.yaml";
 
   graph = std::make_shared<rmf_traffic::agv::Graph>(
     parse_graph(graph_file));
