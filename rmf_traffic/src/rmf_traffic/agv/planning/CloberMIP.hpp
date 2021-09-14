@@ -39,7 +39,9 @@ class COrtools{
 
         void SetTimePeriod(int t);
 
-        void LoadData(std::string filename);
+        void LoadDataFrmFile(std::string filename);
+
+        void LoadData(std::vector<std::string> nodeset, std::vector<std::string> arcset, std::map<std::string, std::map<std::string, std::vector<std::string>>> connectset);
 
         void MakeInitVariables(std::string robot_name);
 
@@ -69,6 +71,8 @@ class COrtools{
         std::vector<std::string> Solve(std::string robot_name);
 
         std::vector<std::string> ConvertNodePath(std::vector<std::string> state_path);
+
+        void PrintMIPData();
 
     private:
         std::unique_ptr<MPSolver> solver_;

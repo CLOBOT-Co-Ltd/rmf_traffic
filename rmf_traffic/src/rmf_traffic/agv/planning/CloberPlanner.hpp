@@ -13,6 +13,7 @@
 
 
 #include <iostream>
+#include <cmath>
 
 namespace rmf_traffic {
 namespace agv {
@@ -73,6 +74,9 @@ public:
   std::vector<std::string> FindNewPath(RobotInfo target, RobotInfo enemy) const;
   bool convertNametoIdPath(const std::vector<std::string> path, std::vector<std::size_t> &idpath) const;
 
+  void GenerateMIPValues();
+
+
 
 private:
     Planner::Configuration _config;
@@ -87,7 +91,8 @@ private:
 
     std::shared_ptr<COrtools> scheduler_;
 
-    std::map<std::string, std::size_t> nameGraph_;
+    std::map<std::string, std::size_t> name_idGraph_;
+    std::map<std::size_t, std::string> id_nameGraph_;
 
 };
 

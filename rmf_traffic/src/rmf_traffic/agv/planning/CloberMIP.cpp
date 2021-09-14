@@ -28,6 +28,10 @@ COrtools::~COrtools()
 void COrtools::ClearRobotSet(){
     solver_->Clear();
     t_robotset_.clear();
+    t_timeset_.clear();
+    t_nodeset_.clear();
+    t_arcset_.clear();
+    t_connect_.clear();
 }
 
 void COrtools::SetRobot(std::string id, std::string start, std::string goal)
@@ -53,7 +57,46 @@ void COrtools::SetTimePeriod(int t)
     }
 }
 
-void COrtools::LoadData(std::string filename)
+void COrtools::PrintMIPData(){
+    std::cout <<"Print MIP Data " <<std::endl;
+    std::cout <<" ==== nodeset ==== " << std::endl;
+    for(int i=0; i<t_nodeset_.size(); i++){
+        std::cout << t_nodeset_[i] << std::endl;
+    }
+
+    std::cout <<" ==== arcset ==== " << std::endl;
+    for(int i=0; i<t_arcset_.size(); i++){
+        std::cout << t_arcset_[i] << std::endl;
+    }
+
+    std::cout <<" ==== connectset ==== " << std::endl;
+    for(auto it=t_connect_.begin(); it!=t_connect_.end(); it++){
+        std::cout << it->first << std::endl;
+
+        std::map<std::string, std::vector<std::string>> data = it->second;
+        
+        for(auto iter=data.begin(); iter!=data.end(); iter++){
+            std::cout << iter->first << std::endl;
+            std::vector<std::string> values = iter->second;
+
+            for(int i=0; i<values.size(); i++){
+                std::cout << values[i]<< ", ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout <<" --------------------- " << std::endl;
+    }
+}
+
+
+void COrtools::LoadData(std::vector<std::string> nodeset, std::vector<std::string> arcset, std::map<std::string, std::map<std::string, std::vector<std::string>>> connectset){
+    t_nodeset_ = nodeset;
+    t_arcset_ = arcset;
+    t_connect_.insert(connectset.begin(), connectset.end());
+}
+
+
+void COrtools::LoadDataFrmFile(std::string filename)
 {
     const YAML::Node mip_config = YAML::LoadFile(filename);
     if (!mip_config)

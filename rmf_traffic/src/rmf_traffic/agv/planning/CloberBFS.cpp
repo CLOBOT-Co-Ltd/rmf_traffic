@@ -59,6 +59,7 @@ void CBFS::bfs_paths(std::string start, std::string goal, std::vector<std::vecto
 
         if (n == goal) {
             result.push_back(path);
+            break;
         } else {
             std::vector<std::string> graph_n;
             graph_n = graph_.find(n)->second;
