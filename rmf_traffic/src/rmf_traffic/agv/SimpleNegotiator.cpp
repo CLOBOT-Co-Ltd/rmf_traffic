@@ -606,6 +606,7 @@ void SimpleNegotiator::respond(
     {
       std::cout << " >>>>> Forfeiting with blockers" << std::endl;
     }
+    std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [SimpleNegotiator.cpp]" << std::endl;
     return responder->forfeit(*best_blockers);
   }
 
@@ -615,6 +616,7 @@ void SimpleNegotiator::respond(
   }
 
   // This would be suspicious. How could the planning fail without any blockers?
+  std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [SimpleNegotiator.cpp] 2" << std::endl;
   responder->forfeit({});
 }
 

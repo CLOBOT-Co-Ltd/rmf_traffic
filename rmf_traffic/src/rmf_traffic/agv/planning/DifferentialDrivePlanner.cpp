@@ -2138,7 +2138,7 @@ std::size_t enemy_startidx,
 std::string enemy_end,
 std::vector<std::string> enemy_path) const 
 {
-    std::cout << "DifferentialDrivePlanner clober_plan id : " << target_robot_id <<std::endl;
+    // std::cout << "DifferentialDrivePlanner clober_plan id : " << target_robot_id <<std::endl;
 }
 #endif
 

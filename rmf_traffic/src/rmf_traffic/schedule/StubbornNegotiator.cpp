@@ -18,6 +18,7 @@
 #include <rmf_traffic/schedule/StubbornNegotiator.hpp>
 #include <rmf_traffic/agv/RouteValidator.hpp>
 
+#include <iostream>
 namespace rmf_traffic {
 namespace schedule {
 
@@ -225,6 +226,7 @@ void StubbornNegotiator::respond(
     {
       // We have been rejected too many times, and we have no parent to reject.
       // Let's just forfeit.
+      std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [StubbornNeogtiator.cpp]" << std::endl;
       responder->forfeit({});
     }
 
@@ -233,6 +235,7 @@ void StubbornNegotiator::respond(
   else
   {
     // If we have had multiple rejections, then let's just forfeit.
+    std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [StubbornNegotiator.cpp] 2" << std::endl;
     responder->forfeit({});
   }
 }

@@ -17,6 +17,8 @@
 
 #include <rmf_traffic/schedule/Negotiator.hpp>
 
+#include <iostream>
+
 namespace rmf_traffic {
 namespace schedule {
 
@@ -87,6 +89,7 @@ void SimpleResponder::forfeit(const std::vector<ParticipantId>& blockers) const
   if (_pimpl->report_blockers)
     *_pimpl->report_blockers = blockers;
 
+  std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [Negotiator.cpp]" << std::endl;
   _pimpl->table->forfeit(_pimpl->table_version);
 }
 

@@ -301,10 +301,10 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   std::pair<Time, Eigen::Vector2d> occupy_a = set_occupy(traj_a.second, pos_a, name_a);
   std::pair<Time, Eigen::Vector2d> occupy_b = set_occupy(traj_b.second, pos_b, name_b);
 
-  std::cout << "pos_a: " << pos_a.x() << " , " << pos_a.y() << std::endl;
-  std::cout << "occupy_a: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
-  std::cout << "pos_b: " << pos_b.x() << " , " << pos_b.y() << std::endl;
-  std::cout << "occupy_b: " << occupy_b.second.x() << " , " << occupy_b.second.y() << std::endl;
+  // std::cout << "pos_a: " << pos_a.x() << " , " << pos_a.y() << std::endl;
+  // std::cout << "occupy_a: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
+  // std::cout << "pos_b: " << pos_b.x() << " , " << pos_b.y() << std::endl;
+  // std::cout << "occupy_b: " << occupy_b.second.x() << " , " << occupy_b.second.y() << std::endl;
 
   /* 충돌 체크 */
   if(abs(occupy_a.second.x() - occupy_b.second.x()) < 0.1 && abs(occupy_a.second.y() - occupy_b.second.y()) < 0.1)
@@ -319,13 +319,18 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
     int idx_a = check_start_idx(occupy_a.second, traj_a.first) - 1;
     if(idx_a < 0) CNN.startidx = 0;
     else CNN.startidx = idx_a;
-    std::vector<std::string> path;
-    for(std::size_t i = CNN.startidx; i < traj_a.first.size(); i++)
-    {
-      path.push_back(traj_a.first[i]);
+    std::vector<std::string> path_a;
+    if(traj_a.first.size() == 0) {
+      path_a.push_back(traj_a.first[0]);
+    } else {
+      for(std::size_t i = CNN.startidx; i < traj_a.first.size(); i++)
+      {
+        path_a.push_back(traj_a.first[i]);
+      }
     }
-    CNN.path = path;
-    CNN.start = path.front();
+    CNN.startidx = 0;
+    CNN.path = path_a;
+    CNN.start = path_a.front();
     CNN.end = traj_a.first.back();
     // CNN.path = traj_a.first;
     // CNN.start = traj_a.first.front();
@@ -334,12 +339,29 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
     msg.robot_info.push_back(CNN);
 
     //enemy
+    // CNN.robotid = name_b;
+    // CNN.path = traj_b.first;
+    // CNN.start = traj_b.first.front();
+    // int idx_b = check_start_idx(occupy_b.second, traj_b.first) - 1;
+    // if(idx_b < 0) CNN.startidx = 0;
+    // else CNN.startidx = idx_b;
+    // CNN.end = traj_b.first.back();
     CNN.robotid = name_b;
-    CNN.path = traj_b.first;
-    CNN.start = traj_b.first.front();
     int idx_b = check_start_idx(occupy_b.second, traj_b.first) - 1;
     if(idx_b < 0) CNN.startidx = 0;
     else CNN.startidx = idx_b;
+    std::vector<std::string> path_b;
+    if(traj_b.first.size() == 0) {
+      path_b.push_back(traj_b.first[0]);
+    } else {
+      for(std::size_t i = CNN.startidx; i < traj_b.first.size(); i++)
+      {
+        path_b.push_back(traj_b.first[i]);
+      }
+    }
+    CNN.startidx = 0;
+    CNN.path = path_b;
+    CNN.start = path_b.front();
     CNN.end = traj_b.first.back();
 
     msg.robot_info.push_back(CNN);
@@ -348,7 +370,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   }  
 
   /* 충돌 없음 */
-  std::cout << "No Collision" << std::endl;
+  // std::cout << "No Collision" << std::endl;
   return msg;
 }
 

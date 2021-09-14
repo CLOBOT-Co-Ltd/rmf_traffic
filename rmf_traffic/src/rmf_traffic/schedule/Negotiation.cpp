@@ -1393,6 +1393,7 @@ bool Negotiation::Table::rejected() const
 //==============================================================================
 void Negotiation::Table::forfeit(Version version)
 {
+  std::cout << "@@@@@@@@@@@@@@@ CheckPoint [Negotiation.cpp]" << std::endl;
   _pimpl->forfeit(version);
 }
 

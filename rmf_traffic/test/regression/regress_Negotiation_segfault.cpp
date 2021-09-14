@@ -21,6 +21,7 @@
 
 #include <rmf_utils/catch.hpp>
 
+#include <iostream>
 namespace {
 //==============================================================================
 struct MockNegotiator : public rmf_traffic::schedule::Negotiator
@@ -40,8 +41,10 @@ struct MockNegotiator : public rmf_traffic::schedule::Negotiator
       responder->submit({});
     else if (Reject == _choice)
       responder->reject({});
-    else
+    else{
+      std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [regress_Negotiation_segfault.cpp]" << std::endl;
       responder->forfeit({});
+    }
   }
 
     #ifdef CLOBER_RMF
@@ -122,7 +125,7 @@ void apply_forfeit(
   {
     const auto& table_ptr = negotiation->table(
       table.for_participant, table.to_accommodate);
-
+    std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [regress_Negotiation_segfault.cpp] 3" << std::endl;
     MockNegotiator().forfeit().respond(
       table_ptr->viewer(), Responder::make(table_ptr));
   }
@@ -205,7 +208,7 @@ SCENARIO("Identify a failed negotiation")
     MockNegotiator().submit().respond(negotiation->table({1, 0}));
 
     MockNegotiator().reject().respond(negotiation->table({1, 2}));
-
+    std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [regress_Negotiation_segfault.cpp] 4" << std::endl;
     MockNegotiator().forfeit().respond(negotiation->table({2}));
     MockNegotiator().forfeit().respond(negotiation->table({1}));
     MockNegotiator().forfeit().respond(negotiation->table({0}));
@@ -262,6 +265,7 @@ public:
 
   void forfeit(const std::vector<ParticipantId>& /*blockers*/) const final
   {
+    std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [regress_Negotiation_segfault.cpp] 5" << std::endl;
     table->forfeit(table->version());
   }
 };
@@ -299,6 +303,7 @@ SCENARIO("Submit after a rejection")
   version = rmf_utils::nullopt;
   auto child_responder = MockResponder::make(
     negotiation->table(1, {0}), &accepted, &version);
+  std::cout << "!!!!!!!!!!!!!!!!!!! CheckPoint [regress_Negotiation_segfault.cpp] 6" << std::endl;
   MockNegotiator().forfeit().respond(
     child_responder->table->viewer(), child_responder);
 
