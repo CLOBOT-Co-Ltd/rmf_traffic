@@ -63,7 +63,8 @@ public:
   Eigen::Vector2d pos_a,
   std::string name_b,
   const Trajectory& trajectory_b,
-  Eigen::Vector2d pos_b);
+  Eigen::Vector2d pos_b,
+  std::string graph_file);
   
   class Implementation;
 };
