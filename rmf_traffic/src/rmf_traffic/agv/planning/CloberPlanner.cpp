@@ -2063,30 +2063,24 @@ CloberPlanner::CloberPlanner(Planner::Configuration config)
   GenerateMIPValues();
   scheduler_->PrintMIPData();
 
-  // testMIP();
+  testMIP();
 }
 
 void CloberPlanner::testMIP()
 {
   RobotInfo target;
   target.robotId_ = "r0";
-  target.start_ = "n1";
+  target.start_ = "n5";
   target.end_ = "n9";
-  target.path_.push_back("n1");
-  target.path_.push_back("n2");
-  target.path_.push_back("n3");
+  target.path_.push_back("n5");
   target.path_.push_back("n6");
   target.path_.push_back("n9");
 
   RobotInfo enemy;
   enemy.robotId_ = "r1";
-  enemy.start_ = "n3";
-  enemy.end_ = "n7";
-  enemy.path_.push_back("n3");
-  enemy.path_.push_back("n2");
-  enemy.path_.push_back("n1");
-  enemy.path_.push_back("n4");
-  enemy.path_.push_back("n7");
+  enemy.start_ = "n6";
+  enemy.end_ = "n6";
+  enemy.path_.push_back("n6");
   enemy.startIdx_ = 0;
 
   std::vector<std::string> name_path = FindNewPath(target, enemy);
@@ -2114,39 +2108,61 @@ void CloberPlanner::GenerateMIPValues()
     {
       std::size_t lane_idx = _config.graph().lanes_from(it->second)[i];
       Graph::Lane lane = _config.graph().get_lane(lane_idx);
+      
+      std::string entry_name = "";
+      std::string exit_name = "";
 
-      std::string entry_name = std::to_string(lane.entry().waypoint_index()); 
-      std::string exit_name = std::to_string(lane.exit().waypoint_index()); 
+      auto f_entry = id_nameGraph_.find(lane.entry().waypoint_index());
+      if ( f_entry != id_nameGraph_.end() ){
+        entry_name = f_entry->second;
+      }else{
+        // todo. std::cerr 로 변경
+        std::cout << "error.. CloberPlanner::GenerateMIPValues()" << std::endl;
+      }
+
+      auto f_exit = id_nameGraph_.find(lane.exit().waypoint_index());
+      if ( f_exit != id_nameGraph_.end() ){
+        exit_name = f_exit->second;
+      }else{
+        // todo. std::cerr 로 변경
+        std::cout << "error.. CloberPlanner::GenerateMIPValues()" << std::endl;
+      }
 
       std::string arc_name;
       arc_name.push_back('a');
-      arc_name.insert(arc_name.end(), entry_name.begin(), entry_name.end());
+      arc_name.insert(arc_name.end(), entry_name.begin()+1, entry_name.end());
       arc_name.push_back('-');
-      arc_name.insert(arc_name.end(), exit_name.begin(), exit_name.end());
+      arc_name.insert(arc_name.end(), exit_name.begin()+1, exit_name.end());
+      
+      // add arc set ( entry-exit)
       mip_arc_set.push_back(arc_name);
 
       std::string in_name;
       in_name.push_back('a');
-      in_name.insert(in_name.end(), entry_name.begin(), entry_name.end());
+      in_name.insert(in_name.end(), exit_name.begin()+1, exit_name.end());
       in_name.push_back('-');
-      in_name.insert(in_name.end(), exit_name.begin(), exit_name.end());
+      in_name.insert(in_name.end(), entry_name.begin()+1, entry_name.end());
 
       std::string out_name;
       out_name.push_back('a');
-      out_name.insert(out_name.end(), exit_name.begin(), exit_name.end());
+      out_name.insert(out_name.end(), entry_name.begin()+1, entry_name.end());
       out_name.push_back('-');
-      out_name.insert(out_name.end(), entry_name.begin(), entry_name.end());
+      out_name.insert(out_name.end(), exit_name.begin()+1, exit_name.end());
 
       inner_set_in.push_back(in_name);
       inner_set_out.push_back(out_name);
     }
 
-      std::string stay_name;
-      std::string curr_vetex_id = std::to_string(it->second);
+      std::string stay_name ="";
+      std::string curr_name = it->first;
       stay_name.push_back('a');
-      stay_name.insert(stay_name.end(), curr_vetex_id.begin(), curr_vetex_id.end());
+      stay_name.insert(stay_name.end(), curr_name.begin()+1, curr_name.end());
       stay_name.push_back('-');
-      stay_name.insert(stay_name.end(), curr_vetex_id.begin(), curr_vetex_id.end());
+      stay_name.insert(stay_name.end(), curr_name.begin()+1, curr_name.end());
+      
+      // add arc set ( stay )
+      mip_arc_set.push_back(stay_name);
+
       inner_set_stay.push_back(stay_name);
 
       inner_set.insert(std::make_pair("in", inner_set_in));
@@ -2375,6 +2391,18 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
       std::cout << "clober planner wp value p[0] : "<< p[0] << std::endl;
       std::cout << "clober planner wp value p[1] : "<< p[1] << std::endl;
 
+      float yaw;
+      if( i < idpath.size()-1 ){
+        std::size_t n = idpath[i+1];
+        const Eigen::Vector2d vec_n = _config.graph().get_waypoint(n).get_location();
+        std::cout << "clober planner wp value vec_n[0] : "<< vec_n[0] << std::endl;
+        std::cout << "clober planner wp value vec_n[1] : "<< vec_n[1] << std::endl;
+    
+        yaw = atan2((vec_n[1]-p[1]),(vec_n[0]-p[0]));
+      }else{
+        yaw = 0.0;
+      }
+
       rmf_traffic::Duration du = rmf_traffic::time::from_seconds(100.0);
       rmf_traffic::Time tt = t_start + du;
 
@@ -2389,7 +2417,7 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
 
       tj.insert(
         tt,
-        Eigen::Vector3d{p[0], p[1], 0.0},
+        Eigen::Vector3d{p[0], p[1], yaw},
         Eigen::Vector3d::Zero()
       );
 
@@ -2399,7 +2427,7 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
       std::vector<std::size_t> app_lanes = _config.graph().lanes_from(s);
 
       waypoints.emplace_back(Plan::Waypoint::Implementation::make(
-          Eigen::Vector3d{p[0], p[1], 0.0}, tt, s, app_lanes, s, s, event
+          Eigen::Vector3d{p[0], p[1], yaw}, tt, s, app_lanes, s, s, event
       ));
 
       t_start = tt;
@@ -2487,7 +2515,6 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   auto startIt = id_nameGraph_.find(startUint);
   auto endIt = id_nameGraph_.find(endUint);
   
-
   std::cout <<"clober planner plan ---> start : " <<startStr<< " ( " << startIt->second  <<" ), end : " <<
           endStr <<" ( "  << endIt->second << " ) "<<std::endl;
 

@@ -28,10 +28,10 @@ COrtools::~COrtools()
 void COrtools::ClearRobotSet(){
     solver_->Clear();
     t_robotset_.clear();
-    t_timeset_.clear();
-    t_nodeset_.clear();
-    t_arcset_.clear();
-    t_connect_.clear();
+    // t_timeset_.clear();
+    // t_nodeset_.clear();
+    // t_arcset_.clear();
+    // t_connect_.clear();
 }
 
 void COrtools::SetRobot(std::string id, std::string start, std::string goal)
