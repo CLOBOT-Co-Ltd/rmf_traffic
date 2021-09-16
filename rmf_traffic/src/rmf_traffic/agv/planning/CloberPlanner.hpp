@@ -15,6 +15,7 @@
 #include <iostream>
 #include <cmath>
 
+
 namespace rmf_traffic {
 namespace agv {
 namespace planning {
@@ -93,6 +94,8 @@ private:
 
     std::map<std::string, std::size_t> name_idGraph_;
     std::map<std::size_t, std::string> id_nameGraph_;
+
+    mutable std::mutex plan_mutex_;
 
 };
 

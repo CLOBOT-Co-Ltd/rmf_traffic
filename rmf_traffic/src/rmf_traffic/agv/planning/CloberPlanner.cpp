@@ -2063,7 +2063,7 @@ CloberPlanner::CloberPlanner(Planner::Configuration config)
   GenerateMIPValues();
   scheduler_->PrintMIPData();
 
-  testMIP();
+  // testMIP();
 }
 
 void CloberPlanner::testMIP()
@@ -2090,8 +2090,9 @@ void CloberPlanner::GenerateMIPValues()
 {
   std::vector<std::string> mip_node_set;
   std::vector<std::string> mip_arc_set;
-  std::map<std::string, std::map<std::string, std::vector<std::string>>> mip_connect_set;
-  
+  std::map<std::string,
+    std::map<std::string, std::vector<std::string>>> mip_connect_set;
+
   std::cout <<" ~~ generate mip variables ~~ "<<std::endl;
 
   for (auto it = _config.graph().keys().begin();
@@ -2108,22 +2109,28 @@ void CloberPlanner::GenerateMIPValues()
     {
       std::size_t lane_idx = _config.graph().lanes_from(it->second)[i];
       Graph::Lane lane = _config.graph().get_lane(lane_idx);
-      
+
       std::string entry_name = "";
       std::string exit_name = "";
 
       auto f_entry = id_nameGraph_.find(lane.entry().waypoint_index());
-      if ( f_entry != id_nameGraph_.end() ){
+      if (f_entry != id_nameGraph_.end() )
+      {
         entry_name = f_entry->second;
-      }else{
+      }
+      else
+      {
         // todo. std::cerr 로 변경
         std::cout << "error.. CloberPlanner::GenerateMIPValues()" << std::endl;
       }
 
       auto f_exit = id_nameGraph_.find(lane.exit().waypoint_index());
-      if ( f_exit != id_nameGraph_.end() ){
+      if (f_exit != id_nameGraph_.end() )
+      {
         exit_name = f_exit->second;
-      }else{
+      }
+      else
+      {
         // todo. std::cerr 로 변경
         std::cout << "error.. CloberPlanner::GenerateMIPValues()" << std::endl;
       }
@@ -2133,7 +2140,7 @@ void CloberPlanner::GenerateMIPValues()
       arc_name.insert(arc_name.end(), entry_name.begin()+1, entry_name.end());
       arc_name.push_back('-');
       arc_name.insert(arc_name.end(), exit_name.begin()+1, exit_name.end());
-      
+
       // add arc set ( entry-exit)
       mip_arc_set.push_back(arc_name);
 
@@ -2153,35 +2160,34 @@ void CloberPlanner::GenerateMIPValues()
       inner_set_out.push_back(out_name);
     }
 
-      std::string stay_name ="";
-      std::string curr_name = it->first;
-      stay_name.push_back('a');
-      stay_name.insert(stay_name.end(), curr_name.begin()+1, curr_name.end());
-      stay_name.push_back('-');
-      stay_name.insert(stay_name.end(), curr_name.begin()+1, curr_name.end());
-      
-      // add arc set ( stay )
-      mip_arc_set.push_back(stay_name);
+    std::string stay_name = "";
+    std::string curr_name = it->first;
+    stay_name.push_back('a');
+    stay_name.insert(stay_name.end(), curr_name.begin()+1, curr_name.end());
+    stay_name.push_back('-');
+    stay_name.insert(stay_name.end(), curr_name.begin()+1, curr_name.end());
 
-      inner_set_stay.push_back(stay_name);
+    // add arc set ( stay )
+    mip_arc_set.push_back(stay_name);
 
-      inner_set.insert(std::make_pair("in", inner_set_in));
-      inner_set.insert(std::make_pair("out", inner_set_out));
-      inner_set.insert(std::make_pair("stay", inner_set_stay));
+    inner_set_stay.push_back(stay_name);
 
-      mip_connect_set.insert(std::make_pair(it->first, inner_set));
+    inner_set.insert(std::make_pair("in", inner_set_in));
+    inner_set.insert(std::make_pair("out", inner_set_out));
+    inner_set.insert(std::make_pair("stay", inner_set_stay));
+
+    mip_connect_set.insert(std::make_pair(it->first, inner_set));
   }
 
   scheduler_->LoadData(mip_node_set, mip_arc_set, mip_connect_set);
 }
 
 
-
 void CloberPlanner::GenerateGraph()
 {
 
   std::cout <<"graph num waypoints : " << _config.graph().num_waypoints() <<
-          std::endl;
+    std::endl;
   std::cout <<"graph num lane : " << _config.graph().num_lanes() <<std::endl;
 
 
@@ -2205,8 +2211,8 @@ void CloberPlanner::GenerateGraph()
       std::size_t lane_idx = _config.graph().lanes_from(it->second)[i];
       Graph::Lane lane = _config.graph().get_lane(lane_idx);
       std::cout << "lane idx " << lane_idx <<" , entry :  " <<
-              lane.entry().waypoint_index() <<", exit : "<<
-              lane.exit().waypoint_index() << std::endl;
+        lane.entry().waypoint_index() <<", exit : "<<
+        lane.exit().waypoint_index() << std::endl;
 
       // graph to wp_idx
       std::string toIdx = std::to_string(lane.exit().waypoint_index());
@@ -2222,7 +2228,7 @@ void CloberPlanner::GenerateGraph()
         fromIt->second.push_back(toIdx);
       }
     }
-      std::cout <<"~~~~~~~~~~~~~~~" << std::endl;
+    std::cout <<"~~~~~~~~~~~~~~~" << std::endl;
   }
 
   pbfs_ = std::make_shared<CBFS>(bfsGraph_);
@@ -2312,6 +2318,8 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   std::vector<std::string> enemy_path) const
 {
 
+  std::cout << " ===== CloberPlanner clober_plan ===== " << std::endl;
+
   RobotInfo target;
   target.robotId_ = target_robot_id;
   target.start_ = target_start;
@@ -2319,7 +2327,7 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   target.path_ = target_path;
 
   std::cout << "CloberPlanner target_robot_id : " << target_robot_id <<
-          std::endl;
+    std::endl;
   std::cout << "CloberPlanner target_start : " << target_start <<std::endl;
   std::cout << "CloberPlanner target_end : " << target_end <<std::endl;
 
@@ -2350,7 +2358,6 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   std::cout << std::endl;
 
 
-  std::cout <<"CloberPlanner FindNewPath 호출" << std::endl;
   std::vector<std::string> name_path = FindNewPath(target, enemy);
   std::vector<std::size_t> idpath;
 
@@ -2373,7 +2380,7 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
 
   if (idpath.size() > 0)
   {
-    std::cout << "CloberPlanner FindNewPath 결과" << std::endl;
+    // std::cout << "CloberPlanner FindNewPath 결과" << std::endl;
 
     auto node = std::make_shared<rclcpp::Node>("clober_planner");
 
@@ -2382,38 +2389,43 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
         ->now().nanoseconds()));
     // std::chrono::steady_clock::time_point t_start = std::chrono::steady_clock::now();
 
-    std::cout << "!!!!!!!!!!!!!!!!path.size(): " << idpath.size() << std::endl;
+    // std::cout << "!!!!!!!!!!!!!!!!path.size(): " << idpath.size() << std::endl;
     for (int i = 0; i < idpath.size(); i++)
     {
       std::size_t s = idpath[i];
 
       const Eigen::Vector2d p = _config.graph().get_waypoint(s).get_location();
-      std::cout << "clober planner wp value p[0] : "<< p[0] << std::endl;
-      std::cout << "clober planner wp value p[1] : "<< p[1] << std::endl;
+      // std::cout << "clober planner wp value p[0] : "<< p[0] << std::endl;
+      // std::cout << "clober planner wp value p[1] : "<< p[1] << std::endl;
 
       float yaw;
-      if( i < idpath.size()-1 ){
+      if (i < idpath.size()-1)
+      {
         std::size_t n = idpath[i+1];
-        const Eigen::Vector2d vec_n = _config.graph().get_waypoint(n).get_location();
-        std::cout << "clober planner wp value vec_n[0] : "<< vec_n[0] << std::endl;
-        std::cout << "clober planner wp value vec_n[1] : "<< vec_n[1] << std::endl;
-    
-        yaw = atan2((vec_n[1]-p[1]),(vec_n[0]-p[0]));
-      }else{
+        const Eigen::Vector2d vec_n =
+          _config.graph().get_waypoint(n).get_location();
+        // std::cout << "clober planner wp value vec_n[0] : "<< vec_n[0] <<
+        //         std::endl;
+        // std::cout << "clober planner wp value vec_n[1] : "<< vec_n[1] <<
+        //         std::endl;
+
+        yaw = atan2((vec_n[1]-p[1]), (vec_n[0]-p[0]));
+      }
+      else
+      {
         yaw = 0.0;
       }
 
       rmf_traffic::Duration du = rmf_traffic::time::from_seconds(100.0);
       rmf_traffic::Time tt = t_start + du;
 
-      std::time_t tt_print = std::chrono::system_clock::to_time_t(
-        std::chrono::system_clock::now() +
-        (tt - std::chrono::steady_clock::now()));
-      std::tm* tm = std::localtime(&tt_print);
-      char buff[32];
-      // Format: Mo, 15.06.2009 20:20:00
-      std::strftime(buff, 32, "%a, %d.%m.%Y %H:%M:%S", tm);
-      std::cout << "tt : " << buff << std::endl;
+      // std::time_t tt_print = std::chrono::system_clock::to_time_t(
+      //   std::chrono::system_clock::now() +
+      //   (tt - std::chrono::steady_clock::now()));
+      // std::tm* tm = std::localtime(&tt_print);
+      // char buff[32];
+      // std::strftime(buff, 32, "%a, %d.%m.%Y %H:%M:%S", tm);
+      // std::cout << "tt : " << buff << std::endl;
 
       tj.insert(
         tt,
@@ -2440,8 +2452,8 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
     {
       const rmf_traffic::Trajectory::Waypoint& way = routes[0].trajectory()[i];
       std::cout << i << " 번째 waypoint: " << "[" << way.position().x() << ", " <<
-              way.position().y() << ", " << way.position().z() << "]" <<
-              std::endl;
+        way.position().y() << ", " << way.position().z() << "]" <<
+        std::endl;
     }
 
     agv::Planner::Start start = state.conditions.starts[0];
@@ -2453,7 +2465,7 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   else
   {
     std::cout << "CloberPlanner Negotiation MIP Plan 결과를 찾지 못함. 기본 plan 호출 " <<
-            std::endl;
+      std::endl;
     return plan(state);
   }
 
@@ -2476,14 +2488,14 @@ bool CloberPlanner::convertNametoIdPath(const std::vector<std::string> path,
     }
     else
     {
-      std::cout << "mapping name : " << it->first << ", id : " << it->second
-                << std::endl;
+      // std::cout << "mapping name : " << it->first << ", id : " << it->second
+      //           << std::endl;
       idpath.push_back(it->second);
     }
   }
 
-  std::cout <<"convertNametoIdPath path size : " << path.size() <<std::endl;
-  std::cout <<"convertNametoIdPath idpath size : " << idpath.size() <<std::endl;
+  // std::cout <<"convertNametoIdPath path size : " << path.size() <<std::endl;
+  // std::cout <<"convertNametoIdPath idpath size : " << idpath.size() <<std::endl;
 
 
   return true;
@@ -2493,18 +2505,17 @@ bool CloberPlanner::convertNametoIdPath(const std::vector<std::string> path,
 //==============================================================================
 std::optional<PlanData> CloberPlanner::plan(State& state) const
 {
-  std::cout << "CloberPlanner plan" << std::endl;
+  std::cout << " ===== CloberPlanner plan ===== " << std::endl;
+  std::lock_guard<std::mutex> lock(plan_mutex_);
 
   std::string startStr;
   std::string endStr;
   std::size_t startUint;
   std::size_t endUint;
 
-  std::cout <<"plan start size : "<< state.conditions.starts.size() <<
-          std::endl;
   for (int i = 0; i < state.conditions.starts.size(); i++)
   {
-    std::cout << i << " : " <<state.conditions.starts[i].waypoint() <<std::endl;
+    // std::cout << i << " : " <<state.conditions.starts[i].waypoint() <<std::endl;
     startStr = std::to_string(state.conditions.starts[i].waypoint());
     startUint = state.conditions.starts[i].waypoint();
   }
@@ -2514,14 +2525,17 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
 
   auto startIt = id_nameGraph_.find(startUint);
   auto endIt = id_nameGraph_.find(endUint);
-  
-  std::cout <<"clober planner plan ---> start : " <<startStr<< " ( " << startIt->second  <<" ), end : " <<
-          endStr <<" ( "  << endIt->second << " ) "<<std::endl;
+
+  std::cout <<"clober planner plan ---> start : " <<startStr<< " ( " <<
+          startIt->second  <<" ), end : " <<
+    endStr <<" ( "  << endIt->second << " ) "<<std::endl;
 
   // bfs 중 첫번째 경로
   std::vector<std::vector<std::string>> candidates;
   pbfs_->bfs_paths(startStr, endStr, candidates);
   pbfs_->printPath();
+
+  std::cout <<"clober bfs 로부터 해당 경로를 생성함" <<std::endl;
 
   std::vector<std::string> path;
   if (candidates.size() > 0)
@@ -2532,22 +2546,12 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
     path.push_back(path[0]);
   }
 
-  // if(path.size() < 1){
-  //   std::cout <<"path 생성 못함.. clober planner return " <<std::endl;
-  //   return;
-  // }
-
-  std::cout <<"clober bfs 로부터 해당 경로를 생성함" <<std::endl;
   std::cout <<" [ ";
   for (int i = 0; i < path.size(); i++)
   {
     std::cout << path[i] << " , ";
   }
   std::cout << " ] " <<std::endl;
-  // std::cout << "해당 경로를 생성하였지만, 다른 고정 경로를 보냄 [ 0, 1, 2, 3 ]"<< std::endl;
-
-  // path -> path_ ~~
-
 
   std::vector<Route> routes;
   Trajectory tj;
@@ -2568,34 +2572,39 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
     ss >> s;
 
     const Eigen::Vector2d p = _config.graph().get_waypoint(s).get_location();
-    std::cout << "clober planner wp value p[0] : "<< p[0] << std::endl;
-    std::cout << "clober planner wp value p[1] : "<< p[1] << std::endl;
+    // std::cout << "clober planner wp value p[0] : "<< p[0] << std::endl;
+    // std::cout << "clober planner wp value p[1] : "<< p[1] << std::endl;
 
     float yaw;
-    if( i < path.size()-1 ){
+    if (i < path.size()-1)
+    {
       std::istringstream nn(path[i+1]);
       std::size_t n;
       nn >> n;
-      const Eigen::Vector2d vec_n = _config.graph().get_waypoint(n).get_location();
-      std::cout << "clober planner wp value vec_n[0] : "<< vec_n[0] << std::endl;
-      std::cout << "clober planner wp value vec_n[1] : "<< vec_n[1] << std::endl;
-  
-      yaw = atan2((vec_n[1]-p[1]),(vec_n[0]-p[0]));
-    }else{
+      const Eigen::Vector2d vec_n =
+        _config.graph().get_waypoint(n).get_location();
+      // std::cout << "clober planner wp value vec_n[0] : "<< vec_n[0] <<
+      //         std::endl;
+      // std::cout << "clober planner wp value vec_n[1] : "<< vec_n[1] <<
+      //         std::endl;
+
+      yaw = atan2((vec_n[1]-p[1]), (vec_n[0]-p[0]));
+    }
+    else
+    {
       yaw = 0.0;
     }
 
     rmf_traffic::Duration du = rmf_traffic::time::from_seconds(100.0);
     rmf_traffic::Time tt = t_start + du;
 
-    std::time_t tt_print = std::chrono::system_clock::to_time_t(
-      std::chrono::system_clock::now() +
-      (tt - std::chrono::steady_clock::now()));
-    std::tm* tm = std::localtime(&tt_print);
-    char buff[32];
-    // Format: Mo, 15.06.2009 20:20:00
-    std::strftime(buff, 32, "%a, %d.%m.%Y %H:%M:%S", tm);
-    std::cout << "tt : " << buff << std::endl;
+    // std::time_t tt_print = std::chrono::system_clock::to_time_t(
+    //   std::chrono::system_clock::now() +
+    //   (tt - std::chrono::steady_clock::now()));
+    // std::tm* tm = std::localtime(&tt_print);
+    // char buff[32];
+    // std::strftime(buff, 32, "%a, %d.%m.%Y %H:%M:%S", tm);
+    // std::cout << "tt : " << buff << std::endl;
 
     tj.insert(
       tt,
@@ -2622,104 +2631,12 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   {
     const rmf_traffic::Trajectory::Waypoint& way = routes[0].trajectory()[i];
     std::cout << i << " 번째 waypoint: " << "[" << way.position().x() << ", " <<
-            way.position().y() << ", " << way.position().z() << "]" <<
-            std::endl;
+      way.position().y() << ", " << way.position().z() << "]" <<
+      std::endl;
   }
-
-  // for(int i=0; i<path.size(); i++){
-  //   std::string map;
-  //   Trajectory tj;
-
-  //   Route rt(map, tj);
-  //   routes.push_back(rt);
-  // }
-
-  // std::chrono::steady_clock::time_point t_start = std::chrono::steady_clock::now();
-
-  // for(int i=0; i<path.size(); i++){
-  //   // string to size_t
-  //   std::istringstream ss(path[i]);
-  //   std::size_t s;
-  //   ss >> s;
-
-  //   const Eigen::Vector2d p = _config.graph().get_waypoint(s).get_location();
-  //   std::cout << "clober planner wp value p[0] : "<< p[0] << std::endl;
-  //   std::cout << "clober planner wp value p[1] : "<< p[1] << std::endl;
-
-  //   rmf_traffic::Duration du = rmf_traffic::time::from_seconds(100.0);
-  //   rmf_traffic::Time tt = t_start + du;
-
-  //   std::time_t tt_print = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now() + (tt - std::chrono::steady_clock::now()));
-  //   std::tm * tm = std::localtime(&tt_print);
-  //   char buff[32];
-  //   // Format: Mo, 15.06.2009 20:20:00
-  //   std::strftime(buff, 32, "%a, %d.%m.%Y %H:%M:%S", tm);
-  //   std::cout << "tt : " << buff << std::endl;
-
-
-  //   routes[i].trajectory().insert(
-  //     tt,
-  //     Eigen::Vector3d{p[0], p[1], 0.0},
-  //     Eigen::Vector3d::Zero()
-  //   );
-
-  //   t_start = tt;
-  // }
-
-  //   std::cout << "clober planner routes is generated !"<< std::endl;
-
-
-  // waypoints
-  // std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-
-  // std::vector<agv::Plan::Waypoint> waypoints;
-  // for(int i=0; i<path.size(); i++){
-
-  //   // string to size_t
-  //   std::istringstream ss(path[i]);
-  //   std::size_t s;
-  //   ss >> s;
-
-  //   std::cout <<"plan string : " << path[i] <<", size_t : "<<s << std::endl;
-
-  //   const Eigen::Vector2d p = _config.graph().get_waypoint(s).get_location();
-  //   rmf_traffic::Time time;
-
-  //   rmf_traffic::Duration du = rmf_traffic::time::from_seconds(100.0);
-  //   rmf_traffic::Time tt = now + du;
-
-  //   rmf_utils::optional<std::size_t> graph_index(s);
-  //   Graph::Lane::EventPtr event;
-
-  //   std::vector<std::size_t> app_lanes = _config.graph().lanes_from(s);
-
-  //   // _config.graph().get_lane(s).entry().event()
-
-  //   waypoints.emplace_back(Plan::Waypoint::Implementation::make(
-  //     Eigen::Vector3d{p[0], p[1], 0.0}, tt, s, app_lanes, s, s , event
-  //   ));
-
-  //   now = tt;
-  // }
 
   agv::Planner::Start start = state.conditions.starts[0];
   double cost;
-
-  // PlanData make_plan(const SearchNodePtr& solution) const
-  // {
-  //   auto nodes = reconstruct_nodes(solution, _validator);
-  //   auto [routes, index] = reconstruct_routes(nodes);
-  //   auto waypoints = reconstruct_waypoints(
-  //     nodes, index, _supergraph->original());
-  //   auto start = find_start(solution);
-
-  //   return PlanData{
-  //     std::move(routes),
-  //     std::move(waypoints),
-  //     std::move(start),
-  //     solution->current_cost
-  //   };
-  // }
 
   return PlanData{
     std::move(routes),
@@ -2735,7 +2652,7 @@ std::vector<std::string> CloberPlanner::FindNewPath(RobotInfo target,
 {
 
   std::cout << "target robot: " << target.robotId_ << ", enemy robot: " <<
-          enemy.robotId_ << std::endl;
+    enemy.robotId_ << std::endl;
 
   // 등록된 로봇셋 제거
   scheduler_->ClearRobotSet();
@@ -2777,8 +2694,7 @@ std::vector<std::string> CloberPlanner::FindNewPath(RobotInfo target,
   if (newPath.size() > 0)
   {
     std::cout <<"우회경로 찾음.. 로봇 : "<<target.robotId_<<", 경로 사이즈 : "<<
-            newPath.size()<<std::endl;
-    std::cout <<" 새로운 우회경로 찾음 "<<std::endl;
+      newPath.size()<<std::endl;
     for (int i = 0; i < newPath.size(); i++)
     {
       std::cout <<newPath[i]<<", ";

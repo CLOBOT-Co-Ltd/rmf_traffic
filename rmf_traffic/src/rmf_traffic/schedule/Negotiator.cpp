@@ -69,6 +69,25 @@ void SimpleResponder::submit(std::vector<Route> itinerary,
 }
 
 //==============================================================================
+void SimpleResponder::clober_submit(std::vector<Route> itinerary,
+  std::function<UpdateVersion()> approval_callback/*approval_callback*/,
+  std::string target_robot_id,
+  std::string target_start,
+  std::string target_end,
+  std::vector<std::string> target_path,
+  std::string enemy_robot_id,
+  std::string enemy_start,
+  std::size_t enemy_startidx,
+  std::string enemy_end,
+  std::vector<std::string> enemy_path) const
+{
+  std::cout <<"[Negotiator.cpp] SimpleResponder::clober_submit 진입" << std::endl;
+
+  _pimpl->table->submit(std::move(itinerary), _pimpl->table_version+1);
+}
+
+
+//==============================================================================
 void SimpleResponder::reject(
   const Negotiation::Alternatives& alternatives) const
 {
