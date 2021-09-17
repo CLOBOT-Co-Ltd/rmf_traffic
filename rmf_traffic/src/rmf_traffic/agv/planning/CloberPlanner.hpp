@@ -95,7 +95,6 @@ private:
     std::map<std::size_t, std::string> id_nameGraph_;
 
     mutable std::mutex plan_mutex_;
-    mutable std::mutex clober_plan_mutex_;
 };
 
 

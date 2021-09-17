@@ -2312,7 +2312,7 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   std::vector<std::string> enemy_path) const
   {
 
-  std::lock_guard<std::mutex> lock(clober_plan_mutex_);
+  std::lock_guard<std::mutex> lock(plan_mutex_);
 
   RobotInfo target;
   target.robotId_ = target_robot_id;

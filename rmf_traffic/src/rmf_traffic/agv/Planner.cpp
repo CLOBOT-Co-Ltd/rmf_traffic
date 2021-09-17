@@ -646,16 +646,26 @@ Planner::Result Planner::Result::Implementation::clober_setup(
   auto state = interface->initiate(
     starts, std::move(goal), std::move(options));
 
-  auto plan = Plan::Implementation::make(interface->clober_plan(state, target_robot_id, target_start,
-            target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path));  
-
   Planner::Result result;
-  result._pimpl = rmf_utils::make_impl<Implementation>(
-    Implementation{
-      std::move(interface),
-      std::move(state),
-      std::move(plan)
-    });
+  if(target_robot_id == "")
+  {
+    result._pimpl = rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(interface),
+        std::move(state),
+        rmf_utils::nullopt
+      });    
+  } else {
+    auto plan = Plan::Implementation::make(interface->clober_plan(state, target_robot_id, target_start,
+          target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path));
+          
+    result._pimpl = rmf_utils::make_impl<Implementation>(
+      Implementation{
+        std::move(interface),
+        std::move(state),
+        std::move(plan)
+      });
+  }
 
   return result;
 }
