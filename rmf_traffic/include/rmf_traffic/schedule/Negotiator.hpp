@@ -61,6 +61,21 @@ public:
       std::vector<Route> itinerary,
       ApprovalCallback approval_callback = nullptr) const = 0;
 
+    #ifdef CLOBER_RMF
+    virtual void clober_submit(
+      std::vector<rmf_traffic::Route> itinerary,
+      ApprovalCallback approval_callback,
+      std::string target_robot_id,
+      std::string target_start,
+      std::string target_end,
+      std::vector<std::string> target_path,
+      std::string enemy_robot_id,
+      std::string enemy_start,
+      std::size_t enemy_startidx,
+      std::string enemy_end,
+      std::vector<std::string> enemy_path) const = 0;
+    #endif
+
     /// The negotiator will call this function if it has decided to reject an
     /// attempt to negotiate. It must supply a set of alternatives for the
     /// parent negotiator to consider for its next proposal.
@@ -149,6 +164,21 @@ public:
     std::vector<Route> itinerary,
     std::function<UpdateVersion()> approval_callback = nullptr) const final;
 
+  #ifdef CLOBER_RMF
+  void clober_submit(
+    std::vector<Route> itinerary,
+    std::function<UpdateVersion()> approval_callback,
+    std::string target_robot_id,
+    std::string target_start,
+    std::string target_end,
+    std::vector<std::string> target_path,
+    std::string enemy_robot_id,
+    std::string enemy_start,
+    std::size_t enemy_startidx,
+    std::string enemy_end,
+    std::vector<std::string> enemy_path) const final;
+  #endif CLOBER_RMF
+  
   // Documentation inherited
   void reject(
     const Negotiation::Alternatives& alternatives) const final;

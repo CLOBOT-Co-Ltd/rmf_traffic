@@ -93,6 +93,23 @@ public:
     Planner::Goal goal,
     Planner::Options options);
 
+  #ifdef CLOBER_RMF
+  static Result clober_setup(
+    planning::InterfacePtr interface,
+    const std::vector<Planner::Start>& starts,
+    Planner::Goal goal,
+    Planner::Options options,
+    std::string target_robot_id,
+    std::string target_start,
+    std::string target_end,
+    std::vector<std::string> target_path,
+    std::string enemy_robot_id,
+    std::string enemy_start,
+    std::size_t enemy_startidx,
+    std::string enemy_end,
+    std::vector<std::string> enemy_path);
+  #endif
+  
   static const Implementation& get(const Result& r);
 
 };

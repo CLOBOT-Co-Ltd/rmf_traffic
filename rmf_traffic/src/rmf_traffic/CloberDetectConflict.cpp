@@ -305,9 +305,9 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   std::pair<Time, Eigen::Vector2d> occupy_b = set_occupy(traj_b.second, pos_b, name_b);
 
   // std::cout << "pos_a: " << pos_a.x() << " , " << pos_a.y() << std::endl;
-  // std::cout << "occupy_a: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
+  std::cout << "occupy_a: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
   // std::cout << "pos_b: " << pos_b.x() << " , " << pos_b.y() << std::endl;
-  // std::cout << "occupy_b: " << occupy_b.second.x() << " , " << occupy_b.second.y() << std::endl;
+  std::cout << "occupy_b: " << occupy_b.second.x() << " , " << occupy_b.second.y() << std::endl;
 
   /* 충돌 체크 */
   if(abs(occupy_a.second.x() - occupy_b.second.x()) < 0.1 && abs(occupy_a.second.y() - occupy_b.second.y()) < 0.1)

@@ -574,29 +574,13 @@ Planner::Result Planner::Result::Implementation::clober_generate(
   std::vector<std::string> enemy_path)
 {
 
-  // std::cout <<"Planner.cpp clober_generate function call~~ "<< std::endl;
   // TODO(MXG): Throw an exception if any of the starts or the goal has an
   // invalid waypoint index.
   auto state = interface->initiate(
     starts, std::move(goal), std::move(options));
 
-  // std::cout <<"Planner::Result::Implementation::clober_generate  시작"<<std::endl;
   auto plan = Plan::Implementation::make(interface->clober_plan(state, target_robot_id, target_start,
-            target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path));
-  
-  // std::cout <<"plan 결과 waypoint size : "<< plan->get_waypoints().size()<<std::endl;
-  // for(int i=0; i<plan->get_waypoints().size(); i++){
-  //   std::cout <<"(x,y) : "<<plan->get_waypoints()[i].position().x() <<" , " <<plan->get_waypoints()[i].position().y() <<std::endl;
-  // }
-
-  // std::cout <<"plan 결과 route size : " << plan->get_itinerary().size() << std::endl;
-  // for(int i=0; i<plan->get_itinerary().size(); i++){
-  //   std::cout << i << " 번째 trajectory size : "<<plan->get_itinerary()[i].trajectory().size() <<std::endl;
-  // }
-
-
-  // std::cout <<"Planner::Result::Implementation::clober_generate  결과"<<std::endl;
-
+            target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path));  
   Planner::Result result;
   result._pimpl = rmf_utils::make_impl<Implementation>(
     Implementation{
@@ -642,6 +626,41 @@ Planner::Result Planner::Result::Implementation::setup(
   return result;
 }
 
+#ifdef CLOBER_RMF
+//==============================================================================
+Planner::Result Planner::Result::Implementation::clober_setup(
+  planning::InterfacePtr interface,
+  const std::vector<Planner::Start>& starts,
+  Planner::Goal goal,
+  Planner::Options options,
+  std::string target_robot_id,
+  std::string target_start,
+  std::string target_end,
+  std::vector<std::string> target_path,
+  std::string enemy_robot_id,
+  std::string enemy_start,
+  std::size_t enemy_startidx,
+  std::string enemy_end,
+  std::vector<std::string> enemy_path)
+{
+  auto state = interface->initiate(
+    starts, std::move(goal), std::move(options));
+
+  auto plan = Plan::Implementation::make(interface->clober_plan(state, target_robot_id, target_start,
+            target_end, target_path, enemy_robot_id, enemy_start, enemy_startidx,  enemy_end, enemy_path));  
+
+  Planner::Result result;
+  result._pimpl = rmf_utils::make_impl<Implementation>(
+    Implementation{
+      std::move(interface),
+      std::move(state),
+      std::move(plan)
+    });
+
+  return result;
+}
+#endif
+
 //==============================================================================
 auto Planner::Result::Implementation::get(const Result& r)
 -> const Implementation&
@@ -677,10 +696,6 @@ auto Planner::get_default_options() const -> const Options&
 //==============================================================================
 Planner::Result Planner::plan(const Start& start, Goal goal) const
 {
-  #ifdef CLOBER_RMF
-  // std::cout <<"Planner::Result Planner::plan(const Start& start, Goal goal) 진입" << std::endl;
-  #endif
-  
   return Result::Implementation::generate(
     _pimpl->interface,
     {start},
@@ -701,8 +716,6 @@ std::size_t enemy_startidx,
 std::string enemy_end,
 std::vector<std::string> enemy_path) const
 {
-    // std::cout <<"Planner::Result Planner::clober_plan(const StartSet& starts, Goal goal) 진입" << std::endl;
-
     return Result::Implementation::clober_generate(
     _pimpl->interface,
     starts,
@@ -729,10 +742,6 @@ Planner::Result Planner::plan(
 //==============================================================================
 Planner::Result Planner::plan(const StartSet& starts, Goal goal) const
 {
-  #ifdef CLOBER_RMF
-  // std::cout <<"Planner::plan(const StartSet& starts, Goal goal) 진입" << std::endl;
-  #endif
-
   return Result::Implementation::generate(
     _pimpl->interface,
     starts,
@@ -798,6 +807,40 @@ Planner::Result Planner::setup(
     std::move(goal),
     std::move(options));
 }
+
+#ifdef CLOBER_RMF
+//==============================================================================
+Planner::Result Planner::clober_setup(
+  const StartSet& start,
+  Goal goal,
+  Options options,
+  std::string target_robot_id,
+  std::string target_start,
+  std::string target_end,
+  std::vector<std::string> target_path,
+  std::string enemy_robot_id,
+  std::string enemy_start,
+  std::size_t enemy_startidx,
+  std::string enemy_end,
+  std::vector<std::string> enemy_path) const
+{
+  std::cout << "[Planner.cpp] clober_setup" << std::endl;
+  return Result::Implementation::clober_setup(
+    _pimpl->interface,
+    start,
+    std::move(goal),
+    std::move(options),
+    target_robot_id,
+    target_start,
+    target_end,
+    target_path,
+    enemy_robot_id,
+    enemy_start,
+    enemy_startidx,
+    enemy_end,
+    enemy_path);
+}
+#endif
 
 //==============================================================================
 bool Planner::Result::success() const

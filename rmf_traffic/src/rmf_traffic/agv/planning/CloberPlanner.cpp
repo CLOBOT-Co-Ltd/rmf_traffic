@@ -2310,7 +2310,9 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   std::size_t enemy_startidx,
   std::string enemy_end,
   std::vector<std::string> enemy_path) const
-{
+  {
+
+  std::lock_guard<std::mutex> lock(clober_plan_mutex_);
 
   RobotInfo target;
   target.robotId_ = target_robot_id;
@@ -2380,23 +2382,17 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
     std::chrono::steady_clock::time_point t_start =
       std::chrono::steady_clock::time_point(std::chrono::nanoseconds(node
         ->now().nanoseconds()));
-    // std::chrono::steady_clock::time_point t_start = std::chrono::steady_clock::now();
 
-    std::cout << "!!!!!!!!!!!!!!!!path.size(): " << idpath.size() << std::endl;
     for (int i = 0; i < idpath.size(); i++)
     {
       std::size_t s = idpath[i];
 
       const Eigen::Vector2d p = _config.graph().get_waypoint(s).get_location();
-      std::cout << "clober planner wp value p[0] : "<< p[0] << std::endl;
-      std::cout << "clober planner wp value p[1] : "<< p[1] << std::endl;
 
       float yaw;
       if( i < idpath.size()-1 ){
         std::size_t n = idpath[i+1];
         const Eigen::Vector2d vec_n = _config.graph().get_waypoint(n).get_location();
-        std::cout << "clober planner wp value vec_n[0] : "<< vec_n[0] << std::endl;
-        std::cout << "clober planner wp value vec_n[1] : "<< vec_n[1] << std::endl;
     
         yaw = atan2((vec_n[1]-p[1]),(vec_n[0]-p[0]));
       }else{
@@ -2413,7 +2409,6 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
       char buff[32];
       // Format: Mo, 15.06.2009 20:20:00
       std::strftime(buff, 32, "%a, %d.%m.%Y %H:%M:%S", tm);
-      std::cout << "tt : " << buff << std::endl;
 
       tj.insert(
         tt,
@@ -2435,14 +2430,6 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
 
     Route route("L1", tj);
     routes.push_back(route);
-
-    for (std::size_t i = 0; i < routes[0].trajectory().size(); i++)
-    {
-      const rmf_traffic::Trajectory::Waypoint& way = routes[0].trajectory()[i];
-      std::cout << i << " 번째 waypoint: " << "[" << way.position().x() << ", " <<
-              way.position().y() << ", " << way.position().z() << "]" <<
-              std::endl;
-    }
 
     agv::Planner::Start start = state.conditions.starts[0];
     double cost;
@@ -2493,6 +2480,8 @@ bool CloberPlanner::convertNametoIdPath(const std::vector<std::string> path,
 //==============================================================================
 std::optional<PlanData> CloberPlanner::plan(State& state) const
 {
+  std::lock_guard<std::mutex> lock(plan_mutex_);
+
   std::cout << "CloberPlanner plan" << std::endl;
 
   std::string startStr;
@@ -2500,11 +2489,8 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   std::size_t startUint;
   std::size_t endUint;
 
-  std::cout <<"plan start size : "<< state.conditions.starts.size() <<
-          std::endl;
   for (int i = 0; i < state.conditions.starts.size(); i++)
   {
-    std::cout << i << " : " <<state.conditions.starts[i].waypoint() <<std::endl;
     startStr = std::to_string(state.conditions.starts[i].waypoint());
     startUint = state.conditions.starts[i].waypoint();
   }
@@ -2515,9 +2501,6 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   auto startIt = id_nameGraph_.find(startUint);
   auto endIt = id_nameGraph_.find(endUint);
   
-  std::cout <<"clober planner plan ---> start : " <<startStr<< " ( " << startIt->second  <<" ), end : " <<
-          endStr <<" ( "  << endIt->second << " ) "<<std::endl;
-
   // bfs 중 첫번째 경로
   std::vector<std::vector<std::string>> candidates;
   pbfs_->bfs_paths(startStr, endStr, candidates);
@@ -2532,23 +2515,6 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
     path.push_back(path[0]);
   }
 
-  // if(path.size() < 1){
-  //   std::cout <<"path 생성 못함.. clober planner return " <<std::endl;
-  //   return;
-  // }
-
-  std::cout <<"clober bfs 로부터 해당 경로를 생성함" <<std::endl;
-  std::cout <<" [ ";
-  for (int i = 0; i < path.size(); i++)
-  {
-    std::cout << path[i] << " , ";
-  }
-  std::cout << " ] " <<std::endl;
-  // std::cout << "해당 경로를 생성하였지만, 다른 고정 경로를 보냄 [ 0, 1, 2, 3 ]"<< std::endl;
-
-  // path -> path_ ~~
-
-
   std::vector<Route> routes;
   Trajectory tj;
   std::vector<agv::Plan::Waypoint> waypoints;
@@ -2560,7 +2526,6 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
       now().nanoseconds()));
   // std::chrono::steady_clock::time_point t_start = std::chrono::steady_clock::now();
 
-  std::cout << "!!!!!!!!!!!!!!!!path.size(): " << path.size() << std::endl;
   for (int i = 0; i < path.size(); i++)
   {
     std::istringstream ss(path[i]);
@@ -2568,8 +2533,6 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
     ss >> s;
 
     const Eigen::Vector2d p = _config.graph().get_waypoint(s).get_location();
-    std::cout << "clober planner wp value p[0] : "<< p[0] << std::endl;
-    std::cout << "clober planner wp value p[1] : "<< p[1] << std::endl;
 
     float yaw;
     if( i < path.size()-1 ){
@@ -2577,8 +2540,6 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
       std::size_t n;
       nn >> n;
       const Eigen::Vector2d vec_n = _config.graph().get_waypoint(n).get_location();
-      std::cout << "clober planner wp value vec_n[0] : "<< vec_n[0] << std::endl;
-      std::cout << "clober planner wp value vec_n[1] : "<< vec_n[1] << std::endl;
   
       yaw = atan2((vec_n[1]-p[1]),(vec_n[0]-p[0]));
     }else{
@@ -2595,7 +2556,6 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
     char buff[32];
     // Format: Mo, 15.06.2009 20:20:00
     std::strftime(buff, 32, "%a, %d.%m.%Y %H:%M:%S", tm);
-    std::cout << "tt : " << buff << std::endl;
 
     tj.insert(
       tt,
@@ -2618,108 +2578,8 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   Route route("L1", tj);
   routes.push_back(route);
 
-  for (std::size_t i = 0; i < routes[0].trajectory().size(); i++)
-  {
-    const rmf_traffic::Trajectory::Waypoint& way = routes[0].trajectory()[i];
-    std::cout << i << " 번째 waypoint: " << "[" << way.position().x() << ", " <<
-            way.position().y() << ", " << way.position().z() << "]" <<
-            std::endl;
-  }
-
-  // for(int i=0; i<path.size(); i++){
-  //   std::string map;
-  //   Trajectory tj;
-
-  //   Route rt(map, tj);
-  //   routes.push_back(rt);
-  // }
-
-  // std::chrono::steady_clock::time_point t_start = std::chrono::steady_clock::now();
-
-  // for(int i=0; i<path.size(); i++){
-  //   // string to size_t
-  //   std::istringstream ss(path[i]);
-  //   std::size_t s;
-  //   ss >> s;
-
-  //   const Eigen::Vector2d p = _config.graph().get_waypoint(s).get_location();
-  //   std::cout << "clober planner wp value p[0] : "<< p[0] << std::endl;
-  //   std::cout << "clober planner wp value p[1] : "<< p[1] << std::endl;
-
-  //   rmf_traffic::Duration du = rmf_traffic::time::from_seconds(100.0);
-  //   rmf_traffic::Time tt = t_start + du;
-
-  //   std::time_t tt_print = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now() + (tt - std::chrono::steady_clock::now()));
-  //   std::tm * tm = std::localtime(&tt_print);
-  //   char buff[32];
-  //   // Format: Mo, 15.06.2009 20:20:00
-  //   std::strftime(buff, 32, "%a, %d.%m.%Y %H:%M:%S", tm);
-  //   std::cout << "tt : " << buff << std::endl;
-
-
-  //   routes[i].trajectory().insert(
-  //     tt,
-  //     Eigen::Vector3d{p[0], p[1], 0.0},
-  //     Eigen::Vector3d::Zero()
-  //   );
-
-  //   t_start = tt;
-  // }
-
-  //   std::cout << "clober planner routes is generated !"<< std::endl;
-
-
-  // waypoints
-  // std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-
-  // std::vector<agv::Plan::Waypoint> waypoints;
-  // for(int i=0; i<path.size(); i++){
-
-  //   // string to size_t
-  //   std::istringstream ss(path[i]);
-  //   std::size_t s;
-  //   ss >> s;
-
-  //   std::cout <<"plan string : " << path[i] <<", size_t : "<<s << std::endl;
-
-  //   const Eigen::Vector2d p = _config.graph().get_waypoint(s).get_location();
-  //   rmf_traffic::Time time;
-
-  //   rmf_traffic::Duration du = rmf_traffic::time::from_seconds(100.0);
-  //   rmf_traffic::Time tt = now + du;
-
-  //   rmf_utils::optional<std::size_t> graph_index(s);
-  //   Graph::Lane::EventPtr event;
-
-  //   std::vector<std::size_t> app_lanes = _config.graph().lanes_from(s);
-
-  //   // _config.graph().get_lane(s).entry().event()
-
-  //   waypoints.emplace_back(Plan::Waypoint::Implementation::make(
-  //     Eigen::Vector3d{p[0], p[1], 0.0}, tt, s, app_lanes, s, s , event
-  //   ));
-
-  //   now = tt;
-  // }
-
   agv::Planner::Start start = state.conditions.starts[0];
   double cost;
-
-  // PlanData make_plan(const SearchNodePtr& solution) const
-  // {
-  //   auto nodes = reconstruct_nodes(solution, _validator);
-  //   auto [routes, index] = reconstruct_routes(nodes);
-  //   auto waypoints = reconstruct_waypoints(
-  //     nodes, index, _supergraph->original());
-  //   auto start = find_start(solution);
-
-  //   return PlanData{
-  //     std::move(routes),
-  //     std::move(waypoints),
-  //     std::move(start),
-  //     solution->current_cost
-  //   };
-  // }
 
   return PlanData{
     std::move(routes),

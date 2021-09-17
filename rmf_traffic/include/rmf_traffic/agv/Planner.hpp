@@ -515,7 +515,7 @@ public:
   ///
   /// \sa plan(const Start&, Goal)
   Result setup(const Start& start, Goal goal) const;
-
+  
   /// Set up a planning job, but do not start iterating.
   ///
   /// \sa plan(const Start&, Goal, Options)
@@ -524,6 +524,21 @@ public:
     Goal goal,
     Options options) const;
 
+  #ifdef CLOBER_RMF
+  Result clober_setup(
+    const StartSet& start,
+    Goal goal,
+    Options options,
+    std::string target_robot_id,
+    std::string target_start,
+    std::string target_end,
+    std::vector<std::string> target_path,
+    std::string enemy_robot_id,
+    std::string enemy_start,
+    std::size_t enemy_startidx,
+    std::string enemy_end,
+    std::vector<std::string> enemy_path) const;
+  #endif
   /// Set up a planning job, but do not start iterating.
   ///
   /// \sa plan(const StartSet&, Goal)
