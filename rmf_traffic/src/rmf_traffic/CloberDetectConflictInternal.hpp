@@ -73,7 +73,7 @@ public:
 /// The navigation graph for the robot
 std::shared_ptr<const rmf_traffic::agv::Graph> graph;
 std::map<const std::string, std::pair<Time, Eigen::Vector2d>> _fleet_pos;
-
+std::map<const std::string, std::pair<int, Eigen::Vector2d>> _old_occupy;
 } // namespace rmf_traffic
 
 #endif

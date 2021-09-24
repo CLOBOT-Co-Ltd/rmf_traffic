@@ -242,6 +242,27 @@ std::size_t check_start_idx(Eigen::Vector2d occupy_pos, std::vector<std::string>
   }
 }
 
+int set_occupy_idx(Eigen::Vector2d occupy_pos, std::string name)
+{
+  if(_old_occupy.find(name) == _old_occupy.end())
+  {
+    _old_occupy.insert({name, std::make_pair(0, occupy_pos)});
+  }
+
+  const auto o_it = _old_occupy.find(name);
+
+  if((occupy_pos.x() != o_it->second.second.x()) && occupy_pos.y() != o_it->second.second.y())
+  {
+    int idx = o_it->second.first + 1;
+    
+    _old_occupy.erase(o_it);
+    _old_occupy.insert({name, std::make_pair(idx, occupy_pos)});
+    
+    return idx;
+  } else {
+    return o_it->second.first;
+  }
+}
 
 }
 
@@ -291,6 +312,31 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
 {
   CloberDetectConflict::ConflictNotice msg;
 
+  if(trajectory_a.size() == 2)
+  {
+    if(trajectory_a[0].position() == trajectory_a[1].position())
+    {
+      std::cout << name_a << " arrive goal" << std:: endl;
+      if(_old_occupy.find(name_a) != _old_occupy.end()){
+        const auto it = _old_occupy.find(name_a);
+        _old_occupy.erase(it);
+      }
+    }
+  }
+
+  if(trajectory_b.size() == 2)
+  {
+    if(trajectory_b[0].position() == trajectory_b[1].position())
+    {
+      std::cout << name_b << " arrive goal" << std:: endl;
+      if(_old_occupy.find(name_b) != _old_occupy.end()){
+        const auto it = _old_occupy.find(name_b);
+        _old_occupy.erase(it);
+      }
+    }
+  }
+
+
   // const std::string graph_file =
   // "/home/clober/clober_rmf_ws/install/clober_rmf/share/clober_rmf/3x3/nav_graphs.yaml";
 
@@ -304,10 +350,16 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   std::pair<Time, Eigen::Vector2d> occupy_a = set_occupy(traj_a.second, pos_a, name_a);
   std::pair<Time, Eigen::Vector2d> occupy_b = set_occupy(traj_b.second, pos_b, name_b);
 
+  int idx_a = set_occupy_idx(occupy_a.second, name_a);
+  int idx_b = set_occupy_idx(occupy_b.second, name_b);
+
   // std::cout << "pos_a: " << pos_a.x() << " , " << pos_a.y() << std::endl;
   std::cout << "occupy_a: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
   // std::cout << "pos_b: " << pos_b.x() << " , " << pos_b.y() << std::endl;
   std::cout << "occupy_b: " << occupy_b.second.x() << " , " << occupy_b.second.y() << std::endl;
+
+  std::cout << "idx_a : " << idx_a << std::endl;
+  std::cout << "idx_b : " << idx_b << std::endl;
 
   /* 충돌 체크 */
   if(abs(occupy_a.second.x() - occupy_b.second.x()) < 0.1 && abs(occupy_a.second.y() - occupy_b.second.y()) < 0.1)
@@ -319,9 +371,9 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
 
     //target
     CNN.robotid = name_a;
-    int idx_a = check_start_idx(occupy_a.second, traj_a.first) - 1;
-    if(idx_a < 0) CNN.startidx = 0;
-    else CNN.startidx = idx_a;
+    // int idx_a = check_start_idx(occupy_a.second, traj_a.first) - 1;
+    if(idx_a == 0) CNN.startidx = 0;
+    else CNN.startidx = idx_a - 1;
     std::vector<std::string> path_a;
     if(traj_a.first.size() == 0) {
       path_a.push_back(traj_a.first[0]);
@@ -350,9 +402,9 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
     // else CNN.startidx = idx_b;
     // CNN.end = traj_b.first.back();
     CNN.robotid = name_b;
-    int idx_b = check_start_idx(occupy_b.second, traj_b.first) - 1;
-    if(idx_b < 0) CNN.startidx = 0;
-    else CNN.startidx = idx_b;
+    // int idx_b = check_start_idx(occupy_b.second, traj_b.first) - 1;
+    if(idx_b == 0) CNN.startidx = 0;
+    else CNN.startidx = idx_b - 1;
     std::vector<std::string> path_b;
     if(traj_b.first.size() == 0) {
       path_b.push_back(traj_b.first[0]);
@@ -368,6 +420,13 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
     CNN.end = traj_b.first.back();
 
     msg.robot_info.push_back(CNN);
+
+    const auto it_a = _old_occupy.find(name_a);
+    _old_occupy.erase(it_a);
+    _old_occupy.insert({name_a, std::make_pair(0, occupy_a.second)});
+    const auto it_b = _old_occupy.find(name_b);
+    _old_occupy.erase(it_b);
+    _old_occupy.insert({name_b, std::make_pair(1, occupy_b.second)});
 
     return msg;
   }  
