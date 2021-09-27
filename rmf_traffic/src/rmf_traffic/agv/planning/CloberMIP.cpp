@@ -43,9 +43,9 @@ void COrtools::SetRobot(std::string id, std::string start, std::string goal)
 
     t_robotset_.insert(std::make_pair(id, robot));
 
-    for(auto it=t_robotset_.begin(); it!=t_robotset_.end(); it++){
-        std::cout <<"scheduler robot member : "<< it->first <<", start : "<<it->second.start_ <<", goal : "<<it->second.goal_<< std::endl;
-    }
+    // for(auto it=t_robotset_.begin(); it!=t_robotset_.end(); it++){
+    //     std::cout <<"scheduler robot member : "<< it->first <<", start : "<<it->second.start_ <<", goal : "<<it->second.goal_<< std::endl;
+    // }
 }
 
 
@@ -699,9 +699,9 @@ void COrtools::PrintVarConst()
 std::vector<std::string> COrtools::Solve(std::string robot_name)
 {
     const MPSolver::ResultStatus result_status = solver_->Solve();
-    std::cout << "result status : " << result_status << std::endl;
-    LOG(INFO) << "Solution:";
-    LOG(INFO) << "Objective value = " << solver_->MutableObjective()->Value();
+    // std::cout << "result status : " << result_status << std::endl;
+    // LOG(INFO) << "Solution:";
+    // LOG(INFO) << "Objective value = " << solver_->MutableObjective()->Value();
 
     std::vector<std::string> arcPath;
     GetSolution(robot_name, arcPath);

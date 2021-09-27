@@ -2248,9 +2248,6 @@ State CloberPlanner::initiate(const std::vector<agv::Planner::Start>& starts,
 {
   using InternalState = ScheduledDifferentialDriveExpander::InternalState;
 
-  std::cout << "CloberPlanner initiate" << std::endl;
-
-
   State state{
     Conditions{
       starts,
@@ -2322,8 +2319,8 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
 
   std::cout << "CloberPlanner target_robot_id : " << target_robot_id <<
           std::endl;
-  std::cout << "CloberPlanner target_start : " << target_start <<std::endl;
-  std::cout << "CloberPlanner target_end : " << target_end <<std::endl;
+  // std::cout << "CloberPlanner target_start : " << target_start <<std::endl;
+  // std::cout << "CloberPlanner target_end : " << target_end <<std::endl;
 
   std::cout << "target path : ";
   for (int i = 0; i < target.path_.size(); i++)
@@ -2340,9 +2337,9 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   enemy.path_ = enemy_path;
 
   std::cout << "CloberPlanner enemy_robot_id : " << enemy_robot_id <<std::endl;
-  std::cout << "CloberPlanner enemy_start : " << enemy_start <<std::endl;
-  std::cout << "CloberPlanner enemy_startidx : " << enemy_startidx <<std::endl;
-  std::cout << "CloberPlanner enemy_end : " << enemy_end <<std::endl;
+  // std::cout << "CloberPlanner enemy_start : " << enemy_start <<std::endl;
+  // std::cout << "CloberPlanner enemy_startidx : " << enemy_startidx <<std::endl;
+  // std::cout << "CloberPlanner enemy_end : " << enemy_end <<std::endl;
 
   std::cout << "enemy path : ";
   for (int i = 0; i < enemy.path_.size(); i++)
@@ -2352,7 +2349,6 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   std::cout << std::endl;
 
 
-  std::cout <<"CloberPlanner FindNewPath 호출" << std::endl;
   std::vector<std::string> name_path = FindNewPath(target, enemy);
   std::vector<std::size_t> idpath;
 
@@ -2375,7 +2371,7 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
 
   if (idpath.size() > 0)
   {
-    std::cout << "CloberPlanner FindNewPath 결과" << std::endl;
+    // std::cout << "CloberPlanner FindNewPath 결과" << std::endl;
 
     auto node = std::make_shared<rclcpp::Node>("clober_planner");
 
@@ -2463,14 +2459,14 @@ bool CloberPlanner::convertNametoIdPath(const std::vector<std::string> path,
     }
     else
     {
-      std::cout << "mapping name : " << it->first << ", id : " << it->second
-                << std::endl;
+      // std::cout << "mapping name : " << it->first << ", id : " << it->second
+      //           << std::endl;
       idpath.push_back(it->second);
     }
   }
 
-  std::cout <<"convertNametoIdPath path size : " << path.size() <<std::endl;
-  std::cout <<"convertNametoIdPath idpath size : " << idpath.size() <<std::endl;
+  // std::cout <<"convertNametoIdPath path size : " << path.size() <<std::endl;
+  // std::cout <<"convertNametoIdPath idpath size : " << idpath.size() <<std::endl;
 
 
   return true;
@@ -2481,8 +2477,6 @@ bool CloberPlanner::convertNametoIdPath(const std::vector<std::string> path,
 std::optional<PlanData> CloberPlanner::plan(State& state) const
 {
   std::lock_guard<std::mutex> lock(plan_mutex_);
-
-  std::cout << "CloberPlanner plan" << std::endl;
 
   std::string startStr;
   std::string endStr;
@@ -2504,7 +2498,7 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   // bfs 중 첫번째 경로
   std::vector<std::vector<std::string>> candidates;
   pbfs_->bfs_paths(startStr, endStr, candidates);
-  pbfs_->printPath();
+  // pbfs_->printPath();
 
   std::vector<std::string> path;
   if (candidates.size() > 0)
@@ -2594,8 +2588,8 @@ std::vector<std::string> CloberPlanner::FindNewPath(RobotInfo target,
   RobotInfo enemy) const
 {
 
-  std::cout << "target robot: " << target.robotId_ << ", enemy robot: " <<
-          enemy.robotId_ << std::endl;
+  // std::cout << "target robot: " << target.robotId_ << ", enemy robot: " <<
+  //         enemy.robotId_ << std::endl;
 
   // 등록된 로봇셋 제거
   scheduler_->ClearRobotSet();
@@ -2636,8 +2630,8 @@ std::vector<std::string> CloberPlanner::FindNewPath(RobotInfo target,
 
   if (newPath.size() > 0)
   {
-    std::cout <<"우회경로 찾음.. 로봇 : "<<target.robotId_<<", 경로 사이즈 : "<<
-            newPath.size()<<std::endl;
+    // std::cout <<"우회경로 찾음.. 로봇 : "<<target.robotId_<<", 경로 사이즈 : "<<
+            // newPath.size()<<std::endl;
     std::cout <<" 새로운 우회경로 찾음 "<<std::endl;
     for (int i = 0; i < newPath.size(); i++)
     {

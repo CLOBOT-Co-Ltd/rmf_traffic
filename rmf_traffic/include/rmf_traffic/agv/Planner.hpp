@@ -537,7 +537,8 @@ public:
     std::string enemy_start,
     std::size_t enemy_startidx,
     std::string enemy_end,
-    std::vector<std::string> enemy_path) const;
+    std::vector<std::string> enemy_path,
+    bool is_MIP) const;
   #endif
   /// Set up a planning job, but do not start iterating.
   ///

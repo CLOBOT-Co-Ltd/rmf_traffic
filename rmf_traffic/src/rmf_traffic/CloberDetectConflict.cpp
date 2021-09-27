@@ -249,15 +249,32 @@ int set_occupy_idx(Eigen::Vector2d occupy_pos, std::string name)
     _old_occupy.insert({name, std::make_pair(0, occupy_pos)});
   }
 
+  std::string pos = std::to_string(occupy_pos.x()) + "," + std::to_string(occupy_pos.y());
+
+  if(_map_occupy.find(pos) == _map_occupy.end())
+  {
+    _map_occupy.insert({pos, name});
+    std::cout << name << "이 " << pos << "를 점유함" << std::endl;
+  }
+
   const auto o_it = _old_occupy.find(name);
+  const auto m_it = _map_occupy.find(pos);
 
   if((occupy_pos.x() != o_it->second.second.x()) && occupy_pos.y() != o_it->second.second.y())
   {
     int idx = o_it->second.first + 1;
-    
+    std::string old_pos = std::to_string(o_it->second.second.x()) + "," + std::to_string(o_it->second.second.y());
+
     _old_occupy.erase(o_it);
     _old_occupy.insert({name, std::make_pair(idx, occupy_pos)});
     
+
+    if(_map_occupy.find(old_pos) != _map_occupy.end()){
+      const auto m_it = _map_occupy.find(old_pos);
+      _map_occupy.erase(m_it);
+      std::cout << name << "이 " << old_pos << "를 해제함" << std::endl;
+    }
+
     return idx;
   } else {
     return o_it->second.first;
@@ -316,7 +333,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   {
     if(trajectory_a[0].position() == trajectory_a[1].position())
     {
-      std::cout << name_a << " arrive goal" << std:: endl;
+      // std::cout << name_a << " arrive goal" << std:: endl;
       if(_old_occupy.find(name_a) != _old_occupy.end()){
         const auto it = _old_occupy.find(name_a);
         _old_occupy.erase(it);
@@ -328,7 +345,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   {
     if(trajectory_b[0].position() == trajectory_b[1].position())
     {
-      std::cout << name_b << " arrive goal" << std:: endl;
+      // std::cout << name_b << " arrive goal" << std:: endl;
       if(_old_occupy.find(name_b) != _old_occupy.end()){
         const auto it = _old_occupy.find(name_b);
         _old_occupy.erase(it);
@@ -361,6 +378,11 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   std::cout << "idx_a : " << idx_a << std::endl;
   std::cout << "idx_b : " << idx_b << std::endl;
 
+  // for (const auto& map_occupy : _map_occupy)
+  // {
+  //   std::cout << map_occupy.second << " 점유 지점 : " << map_occupy.first << std::endl;
+  // }
+
   /* 충돌 체크 */
   if(abs(occupy_a.second.x() - occupy_b.second.x()) < 0.1 && abs(occupy_a.second.y() - occupy_b.second.y()) < 0.1)
   {
@@ -369,66 +391,114 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
    
     rmf_traffic_msgs::msg::CloberNegotiationNotice CNN;
 
-    //target
-    CNN.robotid = name_a;
-    // int idx_a = check_start_idx(occupy_a.second, traj_a.first) - 1;
-    if(idx_a == 0) CNN.startidx = 0;
-    else CNN.startidx = idx_a - 1;
-    std::vector<std::string> path_a;
-    if(traj_a.first.size() == 0) {
-      path_a.push_back(traj_a.first[0]);
-    } else {
-      for(std::size_t i = CNN.startidx; i < traj_a.first.size(); i++)
-      {
-        path_a.push_back(traj_a.first[i]);
+    std::string pos = std::to_string(occupy_a.second.x()) + "," + std::to_string(occupy_a.second.y());
+
+    const auto it = _map_occupy.find(pos);
+    if(it->second == name_b) {
+      std::cout << name_b << "가 선점 하였으므로, target은 " << name_a << ", enemy는 " << name_b << std::endl;
+      //target
+      CNN.robotid = name_a;
+      if(idx_a == 0) CNN.startidx = 0;
+      else CNN.startidx = idx_a - 1;
+      std::vector<std::string> path_a;
+      if(traj_a.first.size() == 0) {
+        path_a.push_back(traj_a.first[0]);
+      } else {
+        for(std::size_t i = CNN.startidx; i < traj_a.first.size(); i++)
+        {
+          path_a.push_back(traj_a.first[i]);
+        }
       }
-    }
-    CNN.startidx = 0;
-    CNN.path = path_a;
-    CNN.start = path_a.front();
-    CNN.end = traj_a.first.back();
-    // CNN.path = traj_a.first;
-    // CNN.start = traj_a.first.front();
-    // CNN.startidx = check_start_idx(occupy_a.second, traj_a.first);
+      CNN.startidx = 0;
+      CNN.path = path_a;
+      CNN.start = path_a.front();
+      CNN.end = traj_a.first.back();
 
-    msg.robot_info.push_back(CNN);
+      msg.robot_info.push_back(CNN);
 
-    //enemy
-    // CNN.robotid = name_b;
-    // CNN.path = traj_b.first;
-    // CNN.start = traj_b.first.front();
-    // int idx_b = check_start_idx(occupy_b.second, traj_b.first) - 1;
-    // if(idx_b < 0) CNN.startidx = 0;
-    // else CNN.startidx = idx_b;
-    // CNN.end = traj_b.first.back();
-    CNN.robotid = name_b;
-    // int idx_b = check_start_idx(occupy_b.second, traj_b.first) - 1;
-    if(idx_b == 0) CNN.startidx = 0;
-    else CNN.startidx = idx_b - 1;
-    std::vector<std::string> path_b;
-    if(traj_b.first.size() == 0) {
-      path_b.push_back(traj_b.first[0]);
-    } else {
-      for(std::size_t i = CNN.startidx; i < traj_b.first.size(); i++)
-      {
-        path_b.push_back(traj_b.first[i]);
+      //enemy
+      CNN.robotid = name_b;
+      if(idx_b == 0) CNN.startidx = 0;
+      else CNN.startidx = idx_b - 1;
+      std::vector<std::string> path_b;
+      if(traj_b.first.size() == 0) {
+        path_b.push_back(traj_b.first[0]);
+      } else {
+        for(std::size_t i = CNN.startidx; i < traj_b.first.size(); i++)
+        {
+          path_b.push_back(traj_b.first[i]);
+        }
       }
+      CNN.startidx = 0;
+      CNN.path = path_b;
+      CNN.start = path_b.front();
+      CNN.end = traj_b.first.back();
+
+      msg.robot_info.push_back(CNN);
+
+      const auto it_a = _old_occupy.find(name_a);
+      _old_occupy.erase(it_a);
+      _old_occupy.insert({name_a, std::make_pair(0, occupy_a.second)});
+      const auto it_b = _old_occupy.find(name_b);
+      _old_occupy.erase(it_b);
+      _old_occupy.insert({name_b, std::make_pair(1, occupy_b.second)});
+
+      return msg;
     }
-    CNN.startidx = 0;
-    CNN.path = path_b;
-    CNN.start = path_b.front();
-    CNN.end = traj_b.first.back();
+    else if(it->second == name_a) {
+      std::cout << name_a << "가 선점 하였으므로, target은 " << name_b << ", enemy는 " << name_a << std::endl;
+      //target
+      CNN.robotid = name_b;
+      if(idx_b == 0) CNN.startidx = 0;
+      else CNN.startidx = idx_b - 1;
+      std::vector<std::string> path_b;
+      if(traj_b.first.size() == 0) {
+        path_b.push_back(traj_b.first[0]);
+      } else {
+        for(std::size_t i = CNN.startidx; i < traj_b.first.size(); i++)
+        {
+          path_b.push_back(traj_b.first[i]);
+        }
+      }
+      CNN.startidx = 0;
+      CNN.path = path_b;
+      CNN.start = path_b.front();
+      CNN.end = traj_b.first.back();
 
-    msg.robot_info.push_back(CNN);
+      msg.robot_info.push_back(CNN);
 
-    const auto it_a = _old_occupy.find(name_a);
-    _old_occupy.erase(it_a);
-    _old_occupy.insert({name_a, std::make_pair(0, occupy_a.second)});
-    const auto it_b = _old_occupy.find(name_b);
-    _old_occupy.erase(it_b);
-    _old_occupy.insert({name_b, std::make_pair(1, occupy_b.second)});
+      //enemy
+      CNN.robotid = name_a;
+      if(idx_a == 0) CNN.startidx = 0;
+      else CNN.startidx = idx_a - 1;
+      std::vector<std::string> path_a;
+      if(traj_a.first.size() == 0) {
+        path_a.push_back(traj_a.first[0]);
+      } else {
+        for(std::size_t i = CNN.startidx; i < traj_a.first.size(); i++)
+        {
+          path_a.push_back(traj_a.first[i]);
+        }
+      }
+      CNN.startidx = 0;
+      CNN.path = path_a;
+      CNN.start = path_a.front();
+      CNN.end = traj_a.first.back();
 
-    return msg;
+      msg.robot_info.push_back(CNN);
+
+      const auto it_a = _old_occupy.find(name_b);
+      _old_occupy.erase(it_a);
+      _old_occupy.insert({name_b, std::make_pair(0, occupy_a.second)});
+      const auto it_b = _old_occupy.find(name_a);
+      _old_occupy.erase(it_b);
+      _old_occupy.insert({name_a, std::make_pair(1, occupy_b.second)});
+
+      return msg;
+    } else {
+      std::cout << "충돌 체크했으나, 점유 우선권 확인 불가" << std::endl;
+      return msg;
+    }
   }  
 
   /* 충돌 없음 */

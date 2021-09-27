@@ -107,7 +107,8 @@ public:
     std::string enemy_start,
     std::size_t enemy_startidx,
     std::string enemy_end,
-    std::vector<std::string> enemy_path);
+    std::vector<std::string> enemy_path,
+    bool is_MIP);
   #endif
   
   static const Implementation& get(const Result& r);

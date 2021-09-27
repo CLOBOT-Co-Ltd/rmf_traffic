@@ -641,13 +641,14 @@ Planner::Result Planner::Result::Implementation::clober_setup(
   std::string enemy_start,
   std::size_t enemy_startidx,
   std::string enemy_end,
-  std::vector<std::string> enemy_path)
+  std::vector<std::string> enemy_path,
+  bool is_MIP)
 {
   auto state = interface->initiate(
     starts, std::move(goal), std::move(options));
 
   Planner::Result result;
-  if(target_robot_id == "")
+  if(!is_MIP)
   {
     result._pimpl = rmf_utils::make_impl<Implementation>(
       Implementation{
@@ -832,9 +833,9 @@ Planner::Result Planner::clober_setup(
   std::string enemy_start,
   std::size_t enemy_startidx,
   std::string enemy_end,
-  std::vector<std::string> enemy_path) const
+  std::vector<std::string> enemy_path,
+  bool is_MIP) const
 {
-  std::cout << "[Planner.cpp] clober_setup" << std::endl;
   return Result::Implementation::clober_setup(
     _pimpl->interface,
     start,
@@ -848,7 +849,8 @@ Planner::Result Planner::clober_setup(
     enemy_start,
     enemy_startidx,
     enemy_end,
-    enemy_path);
+    enemy_path,
+    is_MIP);
 }
 #endif
 
