@@ -746,7 +746,7 @@ std::vector<std::string> COrtools::ConvertNodePath(std::vector<std::string> stat
 
         if (from == to)
         {
-            return nodePath;
+            continue;
         }
         
         if (!start_check_flag)
@@ -759,6 +759,7 @@ std::vector<std::string> COrtools::ConvertNodePath(std::vector<std::string> stat
         std::string name = "n" + to;
         nodePath.push_back(name);
     }
+    return nodePath;
 }
 
 }  // namespace planning

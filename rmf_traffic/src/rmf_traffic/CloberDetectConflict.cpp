@@ -242,7 +242,7 @@ std::size_t check_start_idx(Eigen::Vector2d occupy_pos, std::vector<std::string>
   }
 }
 
-int set_occupy_idx(Eigen::Vector2d occupy_pos, std::string name)
+std::size_t set_occupy_idx(Eigen::Vector2d occupy_pos, std::string name)
 {
   if(_old_occupy.find(name) == _old_occupy.end())
   {
@@ -258,7 +258,6 @@ int set_occupy_idx(Eigen::Vector2d occupy_pos, std::string name)
   }
 
   const auto o_it = _old_occupy.find(name);
-  const auto m_it = _map_occupy.find(pos);
 
   if((occupy_pos.x() != o_it->second.second.x()) && occupy_pos.y() != o_it->second.second.y())
   {
@@ -333,7 +332,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   {
     if(trajectory_a[0].position() == trajectory_a[1].position())
     {
-      // std::cout << name_a << " arrive goal" << std:: endl;
+      std::cout << name_a << " arrive goal" << std:: endl;
       if(_old_occupy.find(name_a) != _old_occupy.end()){
         const auto it = _old_occupy.find(name_a);
         _old_occupy.erase(it);
@@ -345,7 +344,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   {
     if(trajectory_b[0].position() == trajectory_b[1].position())
     {
-      // std::cout << name_b << " arrive goal" << std:: endl;
+      std::cout << name_b << " arrive goal" << std:: endl;
       if(_old_occupy.find(name_b) != _old_occupy.end()){
         const auto it = _old_occupy.find(name_b);
         _old_occupy.erase(it);
@@ -353,6 +352,45 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
     }
   }
 
+  if(_old_traj.find(name_a) == _old_traj.end())
+  {
+    _old_traj.insert({name_a, trajectory_a[0].position()});
+  } else {
+    const auto it = _old_traj.find(name_a);
+    if(it->second != trajectory_a[0].position())
+    {
+      std::cout << name_a << " change trajectory" << std::endl;
+      if(_old_occupy.find(name_a) != _old_occupy.end()){
+        std::cout << name_a << " erase old_occupy" << std::endl;
+        const auto o_it = _old_occupy.find(name_a);
+        Eigen::Vector2d old_pos = o_it->second.second;
+        _old_occupy.erase(o_it);
+        _old_occupy.insert({name_a, std::make_pair(0, old_pos)});
+      }
+      _old_traj.erase(it);
+      _old_traj.insert({name_a, trajectory_a[0].position()});
+    }
+  }
+
+  if(_old_traj.find(name_b) == _old_traj.end())
+  {
+    _old_traj.insert({name_b, trajectory_b[0].position()});
+  } else {
+    const auto it = _old_traj.find(name_b);
+    if(it->second != trajectory_b[0].position())
+    {
+      std::cout << name_b << " change trajectory" << std:: endl;
+      if(_old_occupy.find(name_b) != _old_occupy.end()){
+        std::cout << name_b << " erase old_occupy" << std::endl;
+        const auto o_it = _old_occupy.find(name_b);
+        Eigen::Vector2d old_pos = o_it->second.second;
+        _old_occupy.erase(o_it);
+        _old_occupy.insert({name_b, std::make_pair(0, old_pos)});
+      }
+      _old_traj.erase(it);
+      _old_traj.insert({name_b, trajectory_b[0].position()});
+    }
+  }
 
   // const std::string graph_file =
   // "/home/clober/clober_rmf_ws/install/clober_rmf/share/clober_rmf/3x3/nav_graphs.yaml";
@@ -367,8 +405,8 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   std::pair<Time, Eigen::Vector2d> occupy_a = set_occupy(traj_a.second, pos_a, name_a);
   std::pair<Time, Eigen::Vector2d> occupy_b = set_occupy(traj_b.second, pos_b, name_b);
 
-  int idx_a = set_occupy_idx(occupy_a.second, name_a);
-  int idx_b = set_occupy_idx(occupy_b.second, name_b);
+  std::size_t idx_a = set_occupy_idx(occupy_a.second, name_a);
+  std::size_t idx_b = set_occupy_idx(occupy_b.second, name_b);
 
   // std::cout << "pos_a: " << pos_a.x() << " , " << pos_a.y() << std::endl;
   std::cout << "occupy_a: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
@@ -502,7 +540,6 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   }  
 
   /* 충돌 없음 */
-  // std::cout << "No Collision" << std::endl;
   return msg;
 }
 
