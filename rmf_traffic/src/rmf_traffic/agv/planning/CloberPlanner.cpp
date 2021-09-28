@@ -2482,11 +2482,20 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   std::string endStr;
   std::size_t startUint;
   std::size_t endUint;
+  bool is_conflict_plan = false;
+
+  if(state.conditions.starts[0].orientation() == 400.0){
+    // std::cout << "is_conflict_plan is true" << std::endl;
+    is_conflict_plan = true;
+  } else {
+    // std::cout << "is_conflict_plan is false" << std::endl;
+    // std::cout << state.conditions.starts[0].orientation() << std::endl;
+  }
 
   for (int i = 0; i < state.conditions.starts.size(); i++)
   {
-    startStr = std::to_string(state.conditions.starts[i].waypoint());
     startUint = state.conditions.starts[i].waypoint();
+    startStr = std::to_string(startUint);
   }
 
   endStr = std::to_string(state.conditions.goal.waypoint());
@@ -2498,13 +2507,13 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   // bfs 중 첫번째 경로
   std::vector<std::vector<std::string>> candidates;
   pbfs_->bfs_paths(startStr, endStr, candidates);
-  // pbfs_->printPath();
+  pbfs_->printPath();
 
   std::vector<std::string> path;
   if (candidates.size() > 0)
     path = candidates[0];
 
-  if (path.size() == 1)
+  if (path.size() == 1 && !is_conflict_plan)
   {
     path.push_back(path[0]);
   }
@@ -2520,7 +2529,12 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
       now().nanoseconds()));
   // std::chrono::steady_clock::time_point t_start = std::chrono::steady_clock::now();
 
-  for (int i = 0; i < path.size(); i++)
+  int i;
+  if(path.size() == 1) i = 0;
+  else if(is_conflict_plan) i = 1;
+  else i = 0;
+
+  for ( ; i < path.size(); i++)
   {
     std::istringstream ss(path[i]);
     std::size_t s;
@@ -2572,7 +2586,11 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   Route route("L1", tj);
   routes.push_back(route);
 
-  agv::Planner::Start start = state.conditions.starts[0];
+  Time initial_time = state.conditions.starts[0].time();
+  std::size_t index = stoi(path[0]);
+
+  // agv::Planner::Start start = state.conditions.starts[0];
+  agv::Planner::Start start(initial_time, index, 400.0);;
   double cost;
 
   return PlanData{

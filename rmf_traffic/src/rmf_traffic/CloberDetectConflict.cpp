@@ -171,7 +171,7 @@ std::pair<Time, Eigen::Vector2d> set_occupy(const Trajectory traj, Eigen::Vector
     // std::cout << "way : " << way.position().x() << " , " << way.position().y() << std::endl;
     // std::cout << "pos : " << pos.x() << " , " << pos.y() << std::endl;
 
-    if(abs(way.position().x() - pos.x()) < 0.1 && abs(way.position().y() - pos.y()) < 0.1)
+    if(abs(way.position().x() - pos.x()) < 0.5 && abs(way.position().y() - pos.y()) < 0.5)
     {
       Trajectory::const_iterator it_buff = it;
 
@@ -332,7 +332,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   {
     if(trajectory_a[0].position() == trajectory_a[1].position())
     {
-      std::cout << name_a << " arrive goal" << std:: endl;
+      // std::cout << name_a << " arrive goal" << std:: endl;
       if(_old_occupy.find(name_a) != _old_occupy.end()){
         const auto it = _old_occupy.find(name_a);
         _old_occupy.erase(it);
@@ -344,7 +344,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   {
     if(trajectory_b[0].position() == trajectory_b[1].position())
     {
-      std::cout << name_b << " arrive goal" << std:: endl;
+      // std::cout << name_b << " arrive goal" << std:: endl;
       if(_old_occupy.find(name_b) != _old_occupy.end()){
         const auto it = _old_occupy.find(name_b);
         _old_occupy.erase(it);
@@ -359,9 +359,9 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
     const auto it = _old_traj.find(name_a);
     if(it->second != trajectory_a[0].position())
     {
-      std::cout << name_a << " change trajectory" << std::endl;
+      // std::cout << name_a << " change trajectory" << std::endl;
       if(_old_occupy.find(name_a) != _old_occupy.end()){
-        std::cout << name_a << " erase old_occupy" << std::endl;
+        // std::cout << name_a << " erase old_occupy" << std::endl;
         const auto o_it = _old_occupy.find(name_a);
         Eigen::Vector2d old_pos = o_it->second.second;
         _old_occupy.erase(o_it);
@@ -379,9 +379,9 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
     const auto it = _old_traj.find(name_b);
     if(it->second != trajectory_b[0].position())
     {
-      std::cout << name_b << " change trajectory" << std:: endl;
+      // std::cout << name_b << " change trajectory" << std:: endl;
       if(_old_occupy.find(name_b) != _old_occupy.end()){
-        std::cout << name_b << " erase old_occupy" << std::endl;
+        // std::cout << name_b << " erase old_occupy" << std::endl;
         const auto o_it = _old_occupy.find(name_b);
         Eigen::Vector2d old_pos = o_it->second.second;
         _old_occupy.erase(o_it);
@@ -408,13 +408,13 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   std::size_t idx_a = set_occupy_idx(occupy_a.second, name_a);
   std::size_t idx_b = set_occupy_idx(occupy_b.second, name_b);
 
-  // std::cout << "pos_a: " << pos_a.x() << " , " << pos_a.y() << std::endl;
-  std::cout << "occupy_a: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
-  // std::cout << "pos_b: " << pos_b.x() << " , " << pos_b.y() << std::endl;
-  std::cout << "occupy_b: " << occupy_b.second.x() << " , " << occupy_b.second.y() << std::endl;
+  std::cout << name_a << ", pos_a: " << pos_a.x() << " , " << pos_a.y() << std::endl;
+  // std::cout << "occupy_a: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
+  std::cout << name_b << ", pos_b: " << pos_b.x() << " , " << pos_b.y() << std::endl << std::endl;
+  // std::cout << "occupy_b: " << occupy_b.second.x() << " , " << occupy_b.second.y() << std::endl;
 
-  std::cout << "idx_a : " << idx_a << std::endl;
-  std::cout << "idx_b : " << idx_b << std::endl;
+  // std::cout << "idx_a : " << idx_a << std::endl;
+  // std::cout << "idx_b : " << idx_b << std::endl;
 
   // for (const auto& map_occupy : _map_occupy)
   // {
