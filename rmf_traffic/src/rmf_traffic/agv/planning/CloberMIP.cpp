@@ -683,7 +683,7 @@ void COrtools::GetSolution(std::string robot_name, std::vector<std::string> &sol
             if (v[i]->name().find(robot_name) != std::string::npos)
             {
                 sol.push_back(v[i]->name());
-                LOG(INFO) << v[i]->name() << " : " << v[i]->solution_value();
+                // LOG(INFO) << v[i]->name() << " : " << v[i]->solution_value();
             }
         }
         // LOG(INFO) << v[i]->name() << " : " << v[i]->solution_value();

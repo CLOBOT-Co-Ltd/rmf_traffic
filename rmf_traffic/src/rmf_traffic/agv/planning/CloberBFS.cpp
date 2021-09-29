@@ -17,7 +17,7 @@ void CBFS::printPath() {
     for (int i = 0; i < path_.size(); i++) {
         std::cout << " [ ";
         for (int j = 0; j < path_[i].size(); j++) {
-            std::cout << path_[i][j];
+            std::cout << "n" << stoi(path_[i][j]) + 1;
             if (j < path_[i].size() - 1)
                 std::cout << " , ";
         }

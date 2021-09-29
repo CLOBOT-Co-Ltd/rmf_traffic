@@ -2317,17 +2317,16 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   target.end_ = target_end;
   target.path_ = target_path;
 
-  std::cout << "CloberPlanner target_robot_id : " << target_robot_id <<
-          std::endl;
+  std::cout << "******MIP(" << target_robot_id << ", " << enemy_robot_id << ")******" << std::endl;
+  std::cout << "target_robot_id : " << target_robot_id << "( ";
   // std::cout << "CloberPlanner target_start : " << target_start <<std::endl;
   // std::cout << "CloberPlanner target_end : " << target_end <<std::endl;
 
-  std::cout << "target path : ";
   for (int i = 0; i < target.path_.size(); i++)
   {
-    std::cout << target.path_[i] << ", ";
+    std::cout << target.path_[i] << " ";
   }
-  std::cout << std::endl;
+  std::cout << ")" << std::endl;
 
   RobotInfo enemy;
   enemy.robotId_ = enemy_robot_id;
@@ -2336,18 +2335,17 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   enemy.end_ = enemy_end;
   enemy.path_ = enemy_path;
 
-  std::cout << "CloberPlanner enemy_robot_id : " << enemy_robot_id <<std::endl;
+  std::cout << "enemy_robot_id : " << enemy_robot_id << "( ";
   // std::cout << "CloberPlanner enemy_start : " << enemy_start <<std::endl;
   // std::cout << "CloberPlanner enemy_startidx : " << enemy_startidx <<std::endl;
   // std::cout << "CloberPlanner enemy_end : " << enemy_end <<std::endl;
-
-  std::cout << "enemy path : ";
+  
   for (int i = 0; i < enemy.path_.size(); i++)
   {
-    std::cout << enemy.path_[i] << ", ";
+    std::cout << enemy.path_[i] << " ";
   }
-  std::cout << std::endl;
-
+  std::cout << ")" << std::endl;
+  std::cout << "--------------------------------" << std::endl;
 
   std::vector<std::string> name_path = FindNewPath(target, enemy);
   std::vector<std::size_t> idpath;
@@ -2356,12 +2354,12 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   {
     if (convertNametoIdPath(name_path, idpath))
     {
-      std::cout << "graph name to id 로  잘 변환 되었음" << std::endl;
+      // std::cout << "graph name to id 로  잘 변환 되었음" << std::endl;
     }
     else
     {
       idpath.clear();
-      std::cout << "graph name to id 로 변환 안됨.. error" << std::endl;
+      // std::cout << "graph name to id 로 변환 안됨.. error" << std::endl;
     }
   }
 
@@ -2507,8 +2505,12 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   // bfs 중 첫번째 경로
   std::vector<std::vector<std::string>> candidates;
   pbfs_->bfs_paths(startStr, endStr, candidates);
-  pbfs_->printPath();
-
+  
+  if(is_conflict_plan)
+  {
+    std::cout << ">>> Enemy Robot의 From " << startStr << " To " << endStr << "의 BFS 결과: ";
+    pbfs_->printPath();
+  }
   std::vector<std::string> path;
   if (candidates.size() > 0)
     path = candidates[0];
@@ -2648,9 +2650,18 @@ std::vector<std::string> CloberPlanner::FindNewPath(RobotInfo target,
 
   if (newPath.size() > 0)
   {
+    if(target.end_ != newPath.back())
+    {
+      std::cout << "MIP로 계산된 최종 위치가 목표 위치와 다르므로 제자리에 멈춤" << std::endl;
+      std::cout << "목표 위치: " << target.end_ << ", 계산된 최종 위치: " << newPath.back() << std::endl;
+      newPath.clear();
+      newPath.push_back(target.start_);
+    }
+    
+
     // std::cout <<"우회경로 찾음.. 로봇 : "<<target.robotId_<<", 경로 사이즈 : "<<
             // newPath.size()<<std::endl;
-    std::cout <<" 새로운 우회경로 찾음 "<<std::endl;
+    std::cout << ">>> MIP 결과: " << target.robotId_ << "의 MIP 경로: " ;
     for (int i = 0; i < newPath.size(); i++)
     {
       std::cout <<newPath[i]<<", ";

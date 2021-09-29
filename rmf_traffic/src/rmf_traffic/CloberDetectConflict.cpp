@@ -171,7 +171,7 @@ std::pair<Time, Eigen::Vector2d> set_occupy(const Trajectory traj, Eigen::Vector
     // std::cout << "way : " << way.position().x() << " , " << way.position().y() << std::endl;
     // std::cout << "pos : " << pos.x() << " , " << pos.y() << std::endl;
 
-    if(abs(way.position().x() - pos.x()) < 0.5 && abs(way.position().y() - pos.y()) < 0.5)
+    if(abs(way.position().x() - pos.x()) < 0.1 && abs(way.position().y() - pos.y()) < 0.1)
     {
       Trajectory::const_iterator it_buff = it;
 
@@ -254,7 +254,7 @@ std::size_t set_occupy_idx(Eigen::Vector2d occupy_pos, std::string name)
   if(_map_occupy.find(pos) == _map_occupy.end())
   {
     _map_occupy.insert({pos, name});
-    std::cout << name << "이 " << pos << "를 점유함" << std::endl;
+    // std::cout << name << "이 " << pos << "를 점유함" << std::endl;
   }
 
   const auto o_it = _old_occupy.find(name);
@@ -271,8 +271,16 @@ std::size_t set_occupy_idx(Eigen::Vector2d occupy_pos, std::string name)
     if(_map_occupy.find(old_pos) != _map_occupy.end()){
       const auto m_it = _map_occupy.find(old_pos);
       _map_occupy.erase(m_it);
-      std::cout << name << "이 " << old_pos << "를 해제함" << std::endl;
+      // std::cout << name << "이 " << old_pos << "를 해제함" << std::endl;
     }
+
+    std::cout << "======map occupy set======" << std::endl;
+    std::cout << "robot name : occupy axis" << std::endl;
+    for (const auto& map_occupy : _map_occupy)
+    {
+      std::cout << map_occupy.second << " : " << map_occupy.first << std::endl;
+    }
+    std::cout << "--------------------------" << std::endl;
 
     return idx;
   } else {
@@ -408,9 +416,9 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   std::size_t idx_a = set_occupy_idx(occupy_a.second, name_a);
   std::size_t idx_b = set_occupy_idx(occupy_b.second, name_b);
 
-  std::cout << name_a << ", pos_a: " << pos_a.x() << " , " << pos_a.y() << std::endl;
+  // std::cout << name_a << ", pos_a: " << pos_a.x() << " , " << pos_a.y() << std::endl;
   // std::cout << "occupy_a: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
-  std::cout << name_b << ", pos_b: " << pos_b.x() << " , " << pos_b.y() << std::endl << std::endl;
+  // std::cout << name_b << ", pos_b: " << pos_b.x() << " , " << pos_b.y() << std::endl << std::endl;
   // std::cout << "occupy_b: " << occupy_b.second.x() << " , " << occupy_b.second.y() << std::endl;
 
   // std::cout << "idx_a : " << idx_a << std::endl;
@@ -424,9 +432,10 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   /* 충돌 체크 */
   if(abs(occupy_a.second.x() - occupy_b.second.x()) < 0.1 && abs(occupy_a.second.y() - occupy_b.second.y()) < 0.1)
   {
-    std::cout << "Occur Collision" << std::endl;
+    std::cout << "==============Occur Collision==============" << std::endl;
     std::cout << "Collision Check for " << name_a << " , " << name_b << std::endl;
-   
+    std::cout << "Collision Axis: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
+
     rmf_traffic_msgs::msg::CloberNegotiationNotice CNN;
 
     std::string pos = std::to_string(occupy_a.second.x()) + "," + std::to_string(occupy_a.second.y());
@@ -527,10 +536,10 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
 
       const auto it_a = _old_occupy.find(name_b);
       _old_occupy.erase(it_a);
-      _old_occupy.insert({name_b, std::make_pair(0, occupy_a.second)});
+      _old_occupy.insert({name_b, std::make_pair(0, occupy_b.second)});
       const auto it_b = _old_occupy.find(name_a);
       _old_occupy.erase(it_b);
-      _old_occupy.insert({name_a, std::make_pair(1, occupy_b.second)});
+      _old_occupy.insert({name_a, std::make_pair(1, occupy_a.second)});
 
       return msg;
     } else {
