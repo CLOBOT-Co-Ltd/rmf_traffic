@@ -2371,6 +2371,11 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
   {
     // std::cout << "CloberPlanner FindNewPath 결과" << std::endl;
 
+    if(idpath.size() == 1)
+    {
+      idpath.push_back(idpath[0]);
+    }
+
     auto node = std::make_shared<rclcpp::Node>("clober_planner");
 
     std::chrono::steady_clock::time_point t_start =
@@ -2508,7 +2513,7 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   
   if(is_conflict_plan)
   {
-    std::cout << ">>> Enemy Robot의 From " << startStr << " To " << endStr << "의 BFS 결과: ";
+    std::cout << ">>> Enemy Robot의 From n" << startUint+1 << " To n" << endUint+1 << "의 BFS 결과: ";
     pbfs_->printPath();
   }
   std::vector<std::string> path;
