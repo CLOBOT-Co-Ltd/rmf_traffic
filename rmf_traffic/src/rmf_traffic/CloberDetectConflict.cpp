@@ -171,7 +171,7 @@ std::pair<Time, Eigen::Vector2d> set_occupy(const Trajectory traj, Eigen::Vector
     // std::cout << "way : " << way.position().x() << " , " << way.position().y() << std::endl;
     // std::cout << "pos : " << pos.x() << " , " << pos.y() << std::endl;
 
-    if(abs(way.position().x() - pos.x()) < 0.1 && abs(way.position().y() - pos.y()) < 0.1)
+    if(abs(way.position().x() - pos.x()) < 0.3 && abs(way.position().y() - pos.y()) < 0.3)
     {
       Trajectory::const_iterator it_buff = it;
 
@@ -259,7 +259,7 @@ std::size_t set_occupy_idx(Eigen::Vector2d occupy_pos, std::string name)
 
   const auto o_it = _old_occupy.find(name);
 
-  if((occupy_pos.x() != o_it->second.second.x()) && occupy_pos.y() != o_it->second.second.y())
+  if((occupy_pos.x() != o_it->second.second.x()) || occupy_pos.y() != o_it->second.second.y())
   {
     int idx = o_it->second.first + 1;
     std::string old_pos = std::to_string(o_it->second.second.x()) + "," + std::to_string(o_it->second.second.y());
@@ -466,7 +466,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
       //enemy
       CNN.robotid = name_b;
       if(idx_b == 0) CNN.startidx = 0;
-      else CNN.startidx = idx_b - 1;
+      else CNN.startidx = idx_b;
       std::vector<std::string> path_b;
       if(traj_b.first.size() == 0) {
         path_b.push_back(traj_b.first[0]);
@@ -485,10 +485,10 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
 
       const auto it_a = _old_occupy.find(name_a);
       _old_occupy.erase(it_a);
-      _old_occupy.insert({name_a, std::make_pair(0, occupy_a.second)});
+      _old_occupy.insert({name_a, std::make_pair(1, occupy_a.second)});
       const auto it_b = _old_occupy.find(name_b);
       _old_occupy.erase(it_b);
-      _old_occupy.insert({name_b, std::make_pair(1, occupy_b.second)});
+      _old_occupy.insert({name_b, std::make_pair(0, occupy_b.second)});
 
       return msg;
     }
@@ -517,7 +517,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
       //enemy
       CNN.robotid = name_a;
       if(idx_a == 0) CNN.startidx = 0;
-      else CNN.startidx = idx_a - 1;
+      else CNN.startidx = idx_a;
       std::vector<std::string> path_a;
       if(traj_a.first.size() == 0) {
         path_a.push_back(traj_a.first[0]);
@@ -536,10 +536,10 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
 
       const auto it_a = _old_occupy.find(name_b);
       _old_occupy.erase(it_a);
-      _old_occupy.insert({name_b, std::make_pair(0, occupy_b.second)});
+      _old_occupy.insert({name_b, std::make_pair(1, occupy_b.second)});
       const auto it_b = _old_occupy.find(name_a);
       _old_occupy.erase(it_b);
-      _old_occupy.insert({name_a, std::make_pair(1, occupy_a.second)});
+      _old_occupy.insert({name_a, std::make_pair(0, occupy_a.second)});
 
       return msg;
     } else {

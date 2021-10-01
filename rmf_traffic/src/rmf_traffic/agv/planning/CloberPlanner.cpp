@@ -2497,8 +2497,18 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
 
   for (int i = 0; i < state.conditions.starts.size(); i++)
   {
-    startUint = state.conditions.starts[i].waypoint();
-    startStr = std::to_string(startUint);
+    if(is_conflict_plan)
+    {
+      // conflict 상황 시, node id를 graph 상의 id가 아닌 사용자가 부여한 노드 번호를 부여하였음
+      std::string node = "n"+std::to_string(state.conditions.starts[i].waypoint());
+      const auto it = _config.graph().keys().find(node);
+      
+      startUint = it->second;
+      startStr = std::to_string(startUint);
+    } else {
+      startUint = state.conditions.starts[i].waypoint();
+      startStr = std::to_string(startUint);
+    }
   }
 
   endStr = std::to_string(state.conditions.goal.waypoint());
@@ -2520,7 +2530,7 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   if (candidates.size() > 0)
     path = candidates[0];
 
-  if (path.size() == 1 && !is_conflict_plan)
+  if (path.size() == 1)
   {
     path.push_back(path[0]);
   }
@@ -2534,14 +2544,8 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   std::chrono::steady_clock::time_point t_start =
     std::chrono::steady_clock::time_point(std::chrono::nanoseconds(node->
       now().nanoseconds()));
-  // std::chrono::steady_clock::time_point t_start = std::chrono::steady_clock::now();
 
-  int i;
-  if(path.size() == 1) i = 0;
-  else if(is_conflict_plan) i = 1;
-  else i = 0;
-
-  for ( ; i < path.size(); i++)
+  for (int i = 0 ; i < path.size(); i++)
   {
     std::istringstream ss(path[i]);
     std::size_t s;
