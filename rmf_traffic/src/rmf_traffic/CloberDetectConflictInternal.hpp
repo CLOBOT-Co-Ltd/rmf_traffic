@@ -52,15 +52,7 @@ public:
 
   using Conflicts = std::vector<Conflict>;
 
-  static rmf_utils::optional<Time> between(
-    std::string name_a,
-    const Trajectory& trajectory_a,
-    Eigen::Vector2d pos_a,
-    std::string name_b,
-    const Trajectory& trajectory_b,
-    Eigen::Vector2d pos_b);
-
-  static CloberDetectConflict::ConflictNotice between2(
+  static CloberDetectConflict::ConflictNotice between(
     std::string name_a,
     const Trajectory& trajectory_a,
     Eigen::Vector2d pos_a,

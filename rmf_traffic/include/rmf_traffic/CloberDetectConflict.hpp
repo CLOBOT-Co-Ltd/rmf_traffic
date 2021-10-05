@@ -49,15 +49,7 @@ public:
   
   using ConflictNotice = rmf_traffic_msgs::msg::NegotiationNotice;
   
-  static rmf_utils::optional<rmf_traffic::Time> between(
-  std::string name_a,
-  const Trajectory& trajectory_a,
-  Eigen::Vector2d pos_a,
-  std::string name_b,
-  const Trajectory& trajectory_b,
-  Eigen::Vector2d pos_b);
-
-  static ConflictNotice between2(
+  static ConflictNotice between(
   std::string name_a,
   const Trajectory& trajectory_a,
   Eigen::Vector2d pos_a,

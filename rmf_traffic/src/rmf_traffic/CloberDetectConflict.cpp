@@ -40,21 +40,7 @@
 
 namespace rmf_traffic {
 
-//==============================================================================
-rmf_utils::optional<rmf_traffic::Time> CloberDetectConflict::between(
-  std::string name_a,
-  const Trajectory& trajectory_a,
-  Eigen::Vector2d pos_a,
-  std::string name_b,
-  const Trajectory& trajectory_b,
-  Eigen::Vector2d pos_b)
-{
-  return Implementation::between(
-    name_a, trajectory_a, pos_a,
-    name_b, trajectory_b, pos_b);
-}
-
-CloberDetectConflict::ConflictNotice CloberDetectConflict::between2(
+CloberDetectConflict::ConflictNotice CloberDetectConflict::between(
   std::string name_a,
   const Trajectory& trajectory_a,
   Eigen::Vector2d pos_a,
@@ -63,7 +49,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::between2(
   Eigen::Vector2d pos_b,
   std::string graph_file)
 {
-  return Implementation::between2(
+  return Implementation::between(
     name_a, trajectory_a, pos_a,
     name_b, trajectory_b, pos_b,
     graph_file);
@@ -225,23 +211,6 @@ std::pair<Time, Eigen::Vector2d> set_occupy(const Trajectory traj, Eigen::Vector
   }
 }
 
-std::size_t check_start_idx(Eigen::Vector2d occupy_pos, std::vector<std::string> path)
-{
-  for(std::size_t i = 0; i < graph->num_waypoints(); i++)
-  {
-    // std::cout << graph->get_waypoint(i).get_location().x() << " , " << graph->get_waypoint(i).get_location().y() << std:: endl;
-    if(abs(occupy_pos.x() - graph->get_waypoint(i).get_location().x()) < 0.1
-    && abs(occupy_pos.y() - graph->get_waypoint(i).get_location().y()) < 0.1)
-    {
-      for(std::size_t j = 0; j < path.size(); j++)
-      {
-        if(path[j] == *graph->get_waypoint(i).name())
-          return j;
-      }
-    }
-  }
-}
-
 std::size_t set_occupy_idx(Eigen::Vector2d occupy_pos, std::string name)
 {
   if(_old_occupy.find(name) == _old_occupy.end())
@@ -290,42 +259,7 @@ std::size_t set_occupy_idx(Eigen::Vector2d occupy_pos, std::string name)
 
 }
 
-//==============================================================================
-rmf_utils::optional<rmf_traffic::Time> CloberDetectConflict::Implementation::between(
-  std::string name_a,
-  const Trajectory& trajectory_a,
-  Eigen::Vector2d pos_a,
-  std::string name_b,
-  const Trajectory& trajectory_b,
-  Eigen::Vector2d pos_b)
-{
-  const std::string graph_file =
-  "/home/clober/clober_rmf_ws/install/clober_rmf/share/clober_rmf/3x3/nav_graphs.yaml";
-
-  graph = std::make_shared<rmf_traffic::agv::Graph>(
-    parse_graph(graph_file));
-
-  std::pair<std::vector<std::string>, Trajectory> traj_a = compare_graph(trajectory_a);
-  std::pair<std::vector<std::string>, Trajectory> traj_b = compare_graph(trajectory_b);
-
-  /* 점유 설정 */
-  std::pair<Time, Eigen::Vector2d> occupy_a = set_occupy(traj_a.second, pos_a, name_a);
-  std::pair<Time, Eigen::Vector2d> occupy_b = set_occupy(traj_b.second, pos_b, name_b);
-
-  /* 충돌 체크 */
-  if(abs(occupy_a.second.x() - occupy_b.second.x()) < 0.1 && abs(occupy_a.second.y() - occupy_b.second.y()) < 0.1)
-  {
-    std::cout << "Occur Collision" << std::endl;
-    std::cout << "Collision Check for " << name_a << " , " << name_b << std::endl;
-    return std::min(occupy_a.first, occupy_b.first);
-  }  
-
-  /* 충돌 없음 */
-  // std::cout << "No Collision" << std::endl;
-  return rmf_utils::nullopt;
-}
-
-CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::between2(
+CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::between(
   std::string name_a,
   const Trajectory& trajectory_a,
   Eigen::Vector2d pos_a,
@@ -399,9 +333,6 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
       _old_traj.insert({name_b, trajectory_b[0].position()});
     }
   }
-
-  // const std::string graph_file =
-  // "/home/clober/clober_rmf_ws/install/clober_rmf/share/clober_rmf/3x3/nav_graphs.yaml";
 
   graph = std::make_shared<rmf_traffic::agv::Graph>(
     parse_graph(graph_file));
