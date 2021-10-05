@@ -57,6 +57,44 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::between(
 
 namespace {
 
+void check_arrive_goal(const Trajectory& trajectory, std::string name)
+{
+  if(trajectory.size() == 2)
+  {
+    if(trajectory[0].position() == trajectory[1].position())
+    {
+      // std::cout << name << " arrive goal" << std:: endl;
+      if(_old_occupy.find(name) != _old_occupy.end()){
+        const auto it = _old_occupy.find(name);
+        _old_occupy.erase(it);
+      }
+    }
+  }
+}
+
+void check_change_trajectory(const Trajectory& trajectory, std::string name)
+{
+  if(_old_traj.find(name) == _old_traj.end())
+  {
+    _old_traj.insert({name, trajectory[0].position()});
+  } else {
+    const auto it = _old_traj.find(name);
+    if(it->second != trajectory[0].position())
+    {
+      // std::cout << name << " change trajectory" << std::endl;
+      if(_old_occupy.find(name) != _old_occupy.end()){
+        // std::cout << name << " erase old_occupy" << std::endl;
+        const auto o_it = _old_occupy.find(name);
+        Eigen::Vector2d old_pos = o_it->second.second;
+        _old_occupy.erase(o_it);
+        _old_occupy.insert({name, std::make_pair(0, old_pos)});
+      }
+      _old_traj.erase(it);
+      _old_traj.insert({name, trajectory[0].position()});
+    }
+  }
+}
+
 rmf_traffic::agv::Graph parse_graph(const std::string& graph_file)
 {
   const YAML::Node graph_config = YAML::LoadFile(graph_file);
@@ -270,72 +308,13 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
 {
   CloberDetectConflict::ConflictNotice msg;
 
-  if(trajectory_a.size() == 2)
-  {
-    if(trajectory_a[0].position() == trajectory_a[1].position())
-    {
-      // std::cout << name_a << " arrive goal" << std:: endl;
-      if(_old_occupy.find(name_a) != _old_occupy.end()){
-        const auto it = _old_occupy.find(name_a);
-        _old_occupy.erase(it);
-      }
-    }
-  }
+  check_arrive_goal(trajectory_a, name_a);
+  check_arrive_goal(trajectory_b, name_b);
 
-  if(trajectory_b.size() == 2)
-  {
-    if(trajectory_b[0].position() == trajectory_b[1].position())
-    {
-      // std::cout << name_b << " arrive goal" << std:: endl;
-      if(_old_occupy.find(name_b) != _old_occupy.end()){
-        const auto it = _old_occupy.find(name_b);
-        _old_occupy.erase(it);
-      }
-    }
-  }
+  check_change_trajectory(trajectory_a, name_a);
+  check_change_trajectory(trajectory_b, name_b);
 
-  if(_old_traj.find(name_a) == _old_traj.end())
-  {
-    _old_traj.insert({name_a, trajectory_a[0].position()});
-  } else {
-    const auto it = _old_traj.find(name_a);
-    if(it->second != trajectory_a[0].position())
-    {
-      // std::cout << name_a << " change trajectory" << std::endl;
-      if(_old_occupy.find(name_a) != _old_occupy.end()){
-        // std::cout << name_a << " erase old_occupy" << std::endl;
-        const auto o_it = _old_occupy.find(name_a);
-        Eigen::Vector2d old_pos = o_it->second.second;
-        _old_occupy.erase(o_it);
-        _old_occupy.insert({name_a, std::make_pair(0, old_pos)});
-      }
-      _old_traj.erase(it);
-      _old_traj.insert({name_a, trajectory_a[0].position()});
-    }
-  }
-
-  if(_old_traj.find(name_b) == _old_traj.end())
-  {
-    _old_traj.insert({name_b, trajectory_b[0].position()});
-  } else {
-    const auto it = _old_traj.find(name_b);
-    if(it->second != trajectory_b[0].position())
-    {
-      // std::cout << name_b << " change trajectory" << std:: endl;
-      if(_old_occupy.find(name_b) != _old_occupy.end()){
-        // std::cout << name_b << " erase old_occupy" << std::endl;
-        const auto o_it = _old_occupy.find(name_b);
-        Eigen::Vector2d old_pos = o_it->second.second;
-        _old_occupy.erase(o_it);
-        _old_occupy.insert({name_b, std::make_pair(0, old_pos)});
-      }
-      _old_traj.erase(it);
-      _old_traj.insert({name_b, trajectory_b[0].position()});
-    }
-  }
-
-  graph = std::make_shared<rmf_traffic::agv::Graph>(
-    parse_graph(graph_file));
+  graph = std::make_shared<rmf_traffic::agv::Graph>(parse_graph(graph_file));
 
   std::pair<std::vector<std::string>, Trajectory> traj_a = compare_graph(trajectory_a);
   std::pair<std::vector<std::string>, Trajectory> traj_b = compare_graph(trajectory_b);
@@ -396,8 +375,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
 
       //enemy
       CNN.robotid = name_b;
-      if(idx_b == 0) CNN.startidx = 0;
-      else CNN.startidx = idx_b;
+      CNN.startidx = idx_b;
       std::vector<std::string> path_b;
       if(traj_b.first.size() == 0) {
         path_b.push_back(traj_b.first[0]);
@@ -448,7 +426,7 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
       //enemy
       CNN.robotid = name_a;
       if(idx_a == 0) CNN.startidx = 0;
-      else CNN.startidx = idx_a;
+      CNN.startidx = idx_a;
       std::vector<std::string> path_a;
       if(traj_a.first.size() == 0) {
         path_a.push_back(traj_a.first[0]);
