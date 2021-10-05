@@ -2500,7 +2500,7 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
     if(is_conflict_plan)
     {
       // conflict 상황 시, node id를 graph 상의 id가 아닌 사용자가 부여한 노드 번호를 부여하였음
-      std::string node = "n"+std::to_string(state.conditions.starts[i].waypoint());
+      std::string node = "n"+std::to_string(state.conditions.starts[i].waypoint() + 1);
       const auto it = _config.graph().keys().find(node);
       
       startUint = it->second;
