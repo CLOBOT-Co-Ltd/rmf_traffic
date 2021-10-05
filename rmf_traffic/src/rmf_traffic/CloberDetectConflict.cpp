@@ -63,7 +63,6 @@ void check_arrive_goal(const Trajectory& trajectory, std::string name)
   {
     if(trajectory[0].position() == trajectory[1].position())
     {
-      // std::cout << name << " arrive goal" << std:: endl;
       if(_old_occupy.find(name) != _old_occupy.end()){
         const auto it = _old_occupy.find(name);
         _old_occupy.erase(it);
@@ -81,13 +80,12 @@ void check_change_trajectory(const Trajectory& trajectory, std::string name)
     const auto it = _old_traj.find(name);
     if(it->second != trajectory[0].position())
     {
-      // std::cout << name << " change trajectory" << std::endl;
       if(_old_occupy.find(name) != _old_occupy.end()){
-        // std::cout << name << " erase old_occupy" << std::endl;
         const auto o_it = _old_occupy.find(name);
-        Eigen::Vector2d old_pos = o_it->second.second;
+        Eigen::Vector2d old_pos = o_it->second.second.second;
+        std::string old_pos_name = o_it->second.second.first;
         _old_occupy.erase(o_it);
-        _old_occupy.insert({name, std::make_pair(0, old_pos)});
+        _old_occupy.insert({name, std::make_pair(0, std::make_pair(old_pos_name,old_pos))});
       }
       _old_traj.erase(it);
       _old_traj.insert({name, trajectory[0].position()});
@@ -183,24 +181,24 @@ std::pair<std::vector<std::string>, Trajectory> compare_graph(const Trajectory& 
   return std::make_pair(name, traj);
 }
 
-std::pair<Time, Eigen::Vector2d> set_occupy(const Trajectory traj, Eigen::Vector2d pos, std::string name)
+std::pair<std::string, Eigen::Vector2d> set_occupy(std::pair<std::vector<std::string>, Trajectory> traj, Eigen::Vector2d pos, std::string name)
 {
-  Trajectory::const_iterator it = traj.begin();
+  Trajectory::const_iterator it = traj.second.begin();
+  std::size_t index = 0;
 
   // 로봇이 waypoint 위에 있는 경우 -> 다음 waypoint 반환
-  // std::cout << " set_occupy1" << std:: endl;
-  while(it != traj.end())
+  while(it != traj.second.end())
   {
     const Trajectory::Waypoint& way = *(it);
-    // std::cout << "way : " << way.position().x() << " , " << way.position().y() << std::endl;
-    // std::cout << "pos : " << pos.x() << " , " << pos.y() << std::endl;
 
     if(abs(way.position().x() - pos.x()) < 0.3 && abs(way.position().y() - pos.y()) < 0.3)
     {
       Trajectory::const_iterator it_buff = it;
 
-      if(++it_buff != traj.end()) ++it; 
-
+      if(++it_buff != traj.second.end())
+      {
+        ++it; 
+      }
       const Trajectory::Waypoint& occupy = *(it);
 
       if(_fleet_pos.find(name) != _fleet_pos.end()){
@@ -208,27 +206,28 @@ std::pair<Time, Eigen::Vector2d> set_occupy(const Trajectory traj, Eigen::Vector
         _fleet_pos.erase(f_it);
       }
 
-      _fleet_pos.insert({name, std::make_pair(occupy.time(), Eigen::Vector2d(occupy.position().x(), occupy.position().y()))});
-      return std::make_pair(occupy.time(), Eigen::Vector2d(occupy.position().x(), occupy.position().y()));
+      if(index < traj.first.size() - 1) index++;
+
+      _fleet_pos.insert({name, std::make_pair(traj.first[index], Eigen::Vector2d(occupy.position().x(), occupy.position().y()))});
+      return std::make_pair(traj.first[index], Eigen::Vector2d(occupy.position().x(), occupy.position().y()));
     }
     ++it;
+    ++index;
   }
 
   // 로봇이 waypoint에 있지 않는 경우 -> 이전의 occupy set 반환
   if(_fleet_pos.find(name) != _fleet_pos.end())
   {
-    // std::cout << " set_occupy2" << std:: endl;
-
     const auto f_it = _fleet_pos.find(name);
     return std::make_pair(f_it->second.first, f_it->second.second);
   } else {  // 이전의 occupy_set이 없는 경우 -> 가장 가까운 waypoint 점유
-    // std::cout << " set_occupy3" << std:: endl;
-
-    it = traj.begin();
+    it = traj.second.begin();
     Trajectory::const_iterator it_min = it;
+    index = 0;
+    std::size_t min_index = 0;
     double diff_min = 100.0;
 
-    while(it != traj.end())
+    while(it != traj.second.end())
     {
       const Trajectory::Waypoint& way = *(it);
       double diff_buff = pow(way.position().x() - pos.x(), 2) + pow(way.position().y() - pos.y(), 2);
@@ -236,58 +235,58 @@ std::pair<Time, Eigen::Vector2d> set_occupy(const Trajectory traj, Eigen::Vector
       if(diff_buff < diff_min)
       {
         diff_min = diff_buff;
+        min_index = index;
         it_min = it;
       }
-
+      ++index;
       ++it;
     }
 
     const Trajectory::Waypoint& occupy = *(it_min);
 
-    _fleet_pos.insert({name, std::make_pair(occupy.time(), Eigen::Vector2d(occupy.position().x(), occupy.position().y()))});
-    return std::make_pair(occupy.time(), Eigen::Vector2d(occupy.position().x(), occupy.position().y()));
+    _fleet_pos.insert({name, std::make_pair(traj.first[min_index], Eigen::Vector2d(occupy.position().x(), occupy.position().y()))});
+    return std::make_pair(traj.first[min_index], Eigen::Vector2d(occupy.position().x(), occupy.position().y()));
   }
 }
 
-std::size_t set_occupy_idx(Eigen::Vector2d occupy_pos, std::string name)
+std::size_t set_occupy_idx(std::pair<std::string, Eigen::Vector2d> occupy, std::string name)
 {
   if(_old_occupy.find(name) == _old_occupy.end())
   {
-    _old_occupy.insert({name, std::make_pair(0, occupy_pos)});
+    _old_occupy.insert({name, std::make_pair(0, occupy)});
   }
 
-  std::string pos = std::to_string(occupy_pos.x()) + "," + std::to_string(occupy_pos.y());
-
+  std::string pos = occupy.first;
   if(_map_occupy.find(pos) == _map_occupy.end())
   {
     _map_occupy.insert({pos, name});
-    // std::cout << name << "이 " << pos << "를 점유함" << std::endl;
   }
 
   const auto o_it = _old_occupy.find(name);
 
-  if((occupy_pos.x() != o_it->second.second.x()) || occupy_pos.y() != o_it->second.second.y())
+  if((occupy.second.x() != o_it->second.second.second.x()) || occupy.second.y() != o_it->second.second.second.y())
   {
     int idx = o_it->second.first + 1;
-    std::string old_pos = std::to_string(o_it->second.second.x()) + "," + std::to_string(o_it->second.second.y());
-
+    std::string old_pos = o_it->second.second.first;
     _old_occupy.erase(o_it);
-    _old_occupy.insert({name, std::make_pair(idx, occupy_pos)});
+    _old_occupy.insert({name, std::make_pair(idx, occupy)});
     
 
     if(_map_occupy.find(old_pos) != _map_occupy.end()){
       const auto m_it = _map_occupy.find(old_pos);
-      _map_occupy.erase(m_it);
-      // std::cout << name << "이 " << old_pos << "를 해제함" << std::endl;
+      if(m_it->second == name) _map_occupy.erase(m_it);
     }
 
     std::cout << "======map occupy set======" << std::endl;
     std::cout << "robot name : occupy axis" << std::endl;
     for (const auto& map_occupy : _map_occupy)
     {
-      std::cout << map_occupy.second << " : " << map_occupy.first << std::endl;
+      const auto it = _old_map_occupy.find(map_occupy.first);
+      if(it->second == map_occupy.second) std::cout << map_occupy.second << " : " << map_occupy.first << std::endl;
+      else std::cout << "\x1b[33m" << map_occupy.second << " : " << map_occupy.first << "\x1b[37m" << std::endl;
     }
-    std::cout << "--------------------------" << std::endl;
+
+    _old_map_occupy = _map_occupy;
 
     return idx;
   } else {
@@ -320,39 +319,22 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
   std::pair<std::vector<std::string>, Trajectory> traj_b = compare_graph(trajectory_b);
 
   /* 점유 설정 */
-  std::pair<Time, Eigen::Vector2d> occupy_a = set_occupy(traj_a.second, pos_a, name_a);
-  std::pair<Time, Eigen::Vector2d> occupy_b = set_occupy(traj_b.second, pos_b, name_b);
+  std::pair<std::string, Eigen::Vector2d> occupy_a = set_occupy(traj_a, pos_a, name_a);
+  std::pair<std::string, Eigen::Vector2d> occupy_b = set_occupy(traj_b, pos_b, name_b);
 
-  std::size_t idx_a = set_occupy_idx(occupy_a.second, name_a);
-  std::size_t idx_b = set_occupy_idx(occupy_b.second, name_b);
-
-  // std::cout << name_a << ", pos_a: " << pos_a.x() << " , " << pos_a.y() << std::endl;
-  // std::cout << "occupy_a: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
-  // std::cout << name_b << ", pos_b: " << pos_b.x() << " , " << pos_b.y() << std::endl << std::endl;
-  // std::cout << "occupy_b: " << occupy_b.second.x() << " , " << occupy_b.second.y() << std::endl;
-
-  // std::cout << "idx_a : " << idx_a << std::endl;
-  // std::cout << "idx_b : " << idx_b << std::endl;
-
-  // for (const auto& map_occupy : _map_occupy)
-  // {
-  //   std::cout << map_occupy.second << " 점유 지점 : " << map_occupy.first << std::endl;
-  // }
+  std::size_t idx_a = set_occupy_idx(occupy_a, name_a);
+  std::size_t idx_b = set_occupy_idx(occupy_b, name_b);
 
   /* 충돌 체크 */
-  if(abs(occupy_a.second.x() - occupy_b.second.x()) < 0.1 && abs(occupy_a.second.y() - occupy_b.second.y()) < 0.1)
+  if(occupy_a.first == occupy_b.first)
   {
-    std::cout << "==============Occur Collision==============" << std::endl;
-    std::cout << "Collision Check for " << name_a << " , " << name_b << std::endl;
-    std::cout << "Collision Axis: " << occupy_a.second.x() << " , " << occupy_a.second.y() << std::endl;
-
     rmf_traffic_msgs::msg::CloberNegotiationNotice CNN;
 
-    std::string pos = std::to_string(occupy_a.second.x()) + "," + std::to_string(occupy_a.second.y());
+    std::string pos = occupy_a.first;
 
     const auto it = _map_occupy.find(pos);
     if(it->second == name_b) {
-      std::cout << name_b << "가 선점 하였으므로, target은 " << name_a << ", enemy는 " << name_b << std::endl;
+      std::cout << "\x1b[31m" << name_a << " : " << occupy_a.first << "\x1b[37m" << std::endl;
       //target
       CNN.robotid = name_a;
       if(idx_a == 0) CNN.startidx = 0;
@@ -375,7 +357,8 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
 
       //enemy
       CNN.robotid = name_b;
-      CNN.startidx = idx_b;
+      if(idx_b == 0) CNN.startidx = 0;
+      else CNN.startidx = idx_b;
       std::vector<std::string> path_b;
       if(traj_b.first.size() == 0) {
         path_b.push_back(traj_b.first[0]);
@@ -394,15 +377,15 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
 
       const auto it_a = _old_occupy.find(name_a);
       _old_occupy.erase(it_a);
-      _old_occupy.insert({name_a, std::make_pair(1, occupy_a.second)});
+      _old_occupy.insert({name_a, std::make_pair(1, occupy_a)});
       const auto it_b = _old_occupy.find(name_b);
       _old_occupy.erase(it_b);
-      _old_occupy.insert({name_b, std::make_pair(0, occupy_b.second)});
+      _old_occupy.insert({name_b, std::make_pair(0, occupy_b)});
 
       return msg;
     }
     else if(it->second == name_a) {
-      std::cout << name_a << "가 선점 하였으므로, target은 " << name_b << ", enemy는 " << name_a << std::endl;
+      std::cout << "\x1b[31m" << name_b << " : " << occupy_a.first << "\x1b[37m" << std::endl;
       //target
       CNN.robotid = name_b;
       if(idx_b == 0) CNN.startidx = 0;
@@ -445,14 +428,14 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
 
       const auto it_a = _old_occupy.find(name_b);
       _old_occupy.erase(it_a);
-      _old_occupy.insert({name_b, std::make_pair(1, occupy_b.second)});
+      _old_occupy.insert({name_b, std::make_pair(1, occupy_b)});
       const auto it_b = _old_occupy.find(name_a);
       _old_occupy.erase(it_b);
-      _old_occupy.insert({name_a, std::make_pair(0, occupy_a.second)});
+      _old_occupy.insert({name_a, std::make_pair(0, occupy_a)});
 
       return msg;
     } else {
-      std::cout << "충돌 체크했으나, 점유 우선권 확인 불가" << std::endl;
+      std::cout << "\x1b[34m" << "충돌 체크했으나, 점유 우선권 확인 불가" << "\x1b[37m" << std::endl;
       return msg;
     }
   }  

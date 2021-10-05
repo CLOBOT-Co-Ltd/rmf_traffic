@@ -64,9 +64,10 @@ public:
 
 /// The navigation graph for the robot
 std::shared_ptr<const rmf_traffic::agv::Graph> graph;
-std::map<const std::string, std::pair<Time, Eigen::Vector2d>> _fleet_pos;
-std::map<const std::string, std::pair<std::size_t, Eigen::Vector2d>> _old_occupy;
+std::map<const std::string, std::pair<std::string, Eigen::Vector2d>> _fleet_pos;
+std::map<const std::string, std::pair<std::size_t, std::pair<std::string, Eigen::Vector2d>>> _old_occupy;
 std::map<std::string, const std::string> _map_occupy;
+std::map<std::string, const std::string> _old_map_occupy;
 std::map<const std::string, Eigen::Vector3d> _old_traj;
 } // namespace rmf_traffic
 
