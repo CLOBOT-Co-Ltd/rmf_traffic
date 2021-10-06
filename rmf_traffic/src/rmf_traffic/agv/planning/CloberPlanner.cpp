@@ -2395,7 +2395,10 @@ std::optional<PlanData> CloberPlanner::clober_plan(State& state,
     
         yaw = atan2((vec_n[1]-p[1]),(vec_n[0]-p[0]));
       }else{
-        yaw = 0.0;
+        std::size_t n = idpath[i-1];
+        const Eigen::Vector2d vec_n = _config.graph().get_waypoint(n).get_location();
+    
+        yaw = atan2((p[1]-vec_n[1]),(p[0]-vec_n[0]));
       }
 
       rmf_traffic::Duration du = rmf_traffic::time::from_seconds(100.0);
@@ -2562,7 +2565,12 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   
       yaw = atan2((vec_n[1]-p[1]),(vec_n[0]-p[0]));
     }else{
-      yaw = 0.0;
+      std::istringstream nn(path[i-1]);
+      std::size_t n;
+      nn >> n;
+      const Eigen::Vector2d vec_n = _config.graph().get_waypoint(n).get_location();
+  
+      yaw = atan2((p[1]-vec_n[1]),(p[0]-vec_n[0]));
     }
 
     rmf_traffic::Duration du = rmf_traffic::time::from_seconds(100.0);
