@@ -438,8 +438,67 @@ CloberDetectConflict::ConflictNotice CloberDetectConflict::Implementation::betwe
       std::cout << "\x1b[34m" << "충돌 체크했으나, 점유 우선권 확인 불가" << "\x1b[37m" << std::endl;
       return msg;
     }
-  }  
+  }
+  else if((abs(occupy_a.second.x() - pos_b.x()) < 0.1 && abs(occupy_a.second.y() - pos_b.y() < 0.1))
+  && (abs(occupy_b.second.x() - pos_a.x()) < 0.1 && abs(occupy_b.second.y() - pos_a.y() < 0.1)))
+  {
+    std::cout << "\x1b[34m" << "동시 점유 변경으로 두 대가 서로의 위치를 점유하고 있는 경우" << "\x1b[37m" << std::endl;
+    
+    rmf_traffic_msgs::msg::CloberNegotiationNotice CNN;
 
+    std::string pos = occupy_a.first;
+
+    std::cout << "\x1b[31m" << name_a << " : " << occupy_a.first << "\x1b[37m" << std::endl;
+    
+    //target
+    CNN.robotid = name_a;
+    if(idx_a == 0) CNN.startidx = 0;
+    else CNN.startidx = idx_a - 1;
+    std::vector<std::string> path_a;
+    if(traj_a.first.size() == 0) {
+      path_a.push_back(traj_a.first[0]);
+    } else {
+      for(std::size_t i = CNN.startidx; i < traj_a.first.size(); i++)
+      {
+        path_a.push_back(traj_a.first[i]);
+      }
+    }
+    CNN.startidx = 0;
+    CNN.path = path_a;
+    CNN.start = path_a.front();
+    CNN.end = traj_a.first.back();
+
+    msg.robot_info.push_back(CNN);
+
+    //enemy
+    CNN.robotid = name_b;
+    if(idx_b == 0) CNN.startidx = 0;
+    else CNN.startidx = idx_b;
+    std::vector<std::string> path_b;
+    if(traj_b.first.size() == 0) {
+      path_b.push_back(traj_b.first[0]);
+    } else {
+      for(std::size_t i = CNN.startidx; i < traj_b.first.size(); i++)
+      {
+        path_b.push_back(traj_b.first[i]);
+      }
+    }
+    CNN.startidx = 0;
+    CNN.path = path_b;
+    CNN.start = path_b.front();
+    CNN.end = traj_b.first.back();
+
+    msg.robot_info.push_back(CNN);
+
+    const auto it_a = _old_occupy.find(name_a);
+    _old_occupy.erase(it_a);
+    _old_occupy.insert({name_a, std::make_pair(1, occupy_a)});
+    const auto it_b = _old_occupy.find(name_b);
+    _old_occupy.erase(it_b);
+    _old_occupy.insert({name_b, std::make_pair(0, occupy_b)});
+
+    return msg;
+  }
   /* 충돌 없음 */
   return msg;
 }
