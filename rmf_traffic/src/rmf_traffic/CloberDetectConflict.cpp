@@ -264,7 +264,7 @@ std::size_t set_occupy_idx(std::pair<std::string, Eigen::Vector2d> occupy, std::
 
   const auto o_it = _old_occupy.find(name);
 
-  if((occupy.second.x() != o_it->second.second.second.x()) || occupy.second.y() != o_it->second.second.second.y())
+  if(occupy.first != o_it->second.second.first)
   {
     int idx = o_it->second.first + 1;
     std::string old_pos = o_it->second.second.first;
