@@ -2063,7 +2063,7 @@ CloberPlanner::CloberPlanner(Planner::Configuration config)
   GenerateMIPValues();
   scheduler_->PrintMIPData();
 
-  testMIP();
+  // testMIP();
 }
 
 void CloberPlanner::testMIP()
@@ -2490,7 +2490,7 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   std::size_t endUint;
   bool is_conflict_plan = false;
 
-  if(state.conditions.starts[0].orientation() == 400.0){
+  if(state.conditions.starts[0].orientation() >= 400.0){
     // std::cout << "is_conflict_plan is true" << std::endl;
     is_conflict_plan = true;
   } else {
@@ -2503,7 +2503,7 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
     if(is_conflict_plan)
     {
       // conflict 상황 시, node id를 graph 상의 id가 아닌 사용자가 부여한 노드 번호를 부여하였음
-      std::string node = "n"+std::to_string(state.conditions.starts[i].waypoint() + 1);
+      std::string node = "n"+std::to_string(static_cast<int>(state.conditions.starts[i].orientation() - 400.0));
       const auto it = _config.graph().keys().find(node);
       
       startUint = it->second;
@@ -2609,7 +2609,7 @@ std::optional<PlanData> CloberPlanner::plan(State& state) const
   std::size_t index = stoi(path[0]);
 
   // agv::Planner::Start start = state.conditions.starts[0];
-  agv::Planner::Start start(initial_time, index, 400.0);;
+  agv::Planner::Start start(initial_time, 0, state.conditions.starts[0].orientation());;
   double cost;
 
   return PlanData{
